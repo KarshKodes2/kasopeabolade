@@ -3,13 +3,33 @@
   "tasks": {
     "dev": {
       "dependsOn": ["^dev"],
+      "persistent": true,
       "cache": false
     },
     "build": {
       "dependsOn": ["^build"],
       "outputs": [".next/**", "dist/**"]
     },
-    "lint": {},
-    "format": {}
+    "format": {},
+    "lint": { "outputs": [] },
+    "check-types": {
+      "dependsOn": ["^check-types"],
+      "outputs": []
+    },
+    "seed": {
+      "cache": false,
+      "outputs": []
+    },
+    "e2e": {
+      "dependsOn": ["build"],
+      "outputs": []
+    },
+    "generate": {
+      "outputs": ["node_modules/.prisma/**"]
+    },
+    "sync": {
+      "cache": false,
+      "outputs": []
+    }
   }
 }

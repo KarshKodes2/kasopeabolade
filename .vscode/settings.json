@@ -1,0 +1,9 @@
+{
+  "editor.formatOnSave": true,
+  "eslint.validate": ["typescript", "javascript"],
+  "files.exclude": {
+    "**/.next": true,
+    "**/dist": true,
+    "**/node_modules": true
+  }
+}

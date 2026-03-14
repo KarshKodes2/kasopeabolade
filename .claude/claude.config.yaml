@@ -1,0 +1,310 @@
+# Claude Agent Configuration for Kasope Abolade Monorepo
+# This file defines all subagents, their prompts, and global settings
+
+version: "1.0"
+project: "kasopeabolade-monorepo"
+
+# ============================================================================
+# GLOBAL SETTINGS
+# ============================================================================
+global:
+  default_model: "sonnet"
+  max_tokens: 8000
+  temperature: 0.7
+
+  # Monorepo workspace configuration
+  workspaces:
+    - apps/admin
+    - apps/portfolio
+    - apps/dj-karsh
+    - apps/karsh-core
+    - packages/db
+    - packages/ui
+    - packages/utils
+
+  # Git hooks for code quality
+  hooks:
+    pre_commit:
+      - "npm run lint"
+      - "npm run check-types"
+    pre_push:
+      - "npm run build"
+
+  # Commit message format
+  commit_format: "{app}: ({type}:) {description}"
+  commit_types:
+    - feat      # New feature
+    - fix       # Bug fix
+    - chore     # Maintenance
+    - docs      # Documentation
+    - style     # Code style
+    - refactor  # Restructuring
+    - test      # Test changes
+    - perf      # Performance
+    - build     # Build system
+
+# ============================================================================
+# SUBAGENTS
+# ============================================================================
+agents:
+
+  # ---------------------------------------------------------------------------
+  # ARCHITECT - Validates monorepo structure and dependencies
+  # ---------------------------------------------------------------------------
+  architect:
+    model: "sonnet"
+    description: "Validates monorepo architecture, package boundaries, and dependencies"
+    trigger: "/architect"
+    prompt_file: ".claude/commands/architect.md"
+    allowed_tools:
+      - Glob
+      - Grep
+      - Read
+      - Bash
+    context:
+      - "turbo.json"
+      - "package.json"
+      - "tsconfig.base.json"
+
+  # ---------------------------------------------------------------------------
+  # REVIEWER - Pre-merge code review
+  # ---------------------------------------------------------------------------
+  reviewer:
+    model: "sonnet"
+    description: "Comprehensive code review for PRs and changes"
+    trigger: "/reviewer"
+    prompt_file: ".claude/commands/reviewer.md"
+    allowed_tools:
+      - Glob
+      - Grep
+      - Read
+      - Bash
+    checklist:
+      - "TypeScript strict compliance"
+      - "No cross-package circular dependencies"
+      - "Proper error handling"
+      - "Security best practices"
+      - "Performance considerations"
+      - "Test coverage"
+
+  # ---------------------------------------------------------------------------
+  # TESTER - Generates tests for all apps
+  # ---------------------------------------------------------------------------
+  tester:
+    model: "sonnet"
+    description: "Generates unit tests (Vitest) and E2E tests (Playwright)"
+    trigger: "/tester"
+    prompt_file: ".claude/commands/tester.md"
+    allowed_tools:
+      - Glob
+      - Grep
+      - Read
+      - Write
+      - Bash
+    coverage_goals:
+      functions: 80
+      branches: 75
+      lines: 80
+      statements: 80
+
+  # ---------------------------------------------------------------------------
+  # SECURITY-AUDITOR - OWASP compliance and vulnerability scanning
+  # ---------------------------------------------------------------------------
+  security-auditor:
+    model: "sonnet"
+    description: "Security audit for OWASP Top 10, RBAC, and dependencies"
+    trigger: "/security-auditor"
+    prompt_file: ".claude/commands/security-auditor.md"
+    allowed_tools:
+      - Glob
+      - Grep
+      - Read
+      - Bash
+    checks:
+      - "OWASP Top 10"
+      - "RBAC implementation"
+      - "Authentication flows"
+      - "Input validation"
+      - "Dependency vulnerabilities"
+      - "Environment variable security"
+
+  # ---------------------------------------------------------------------------
+  # DOC-WRITER - Documentation generation
+  # ---------------------------------------------------------------------------
+  doc-writer:
+    model: "haiku"
+    description: "Generates documentation for features, APIs, and components"
+    trigger: "/doc-writer"
+    prompt_file: ".claude/commands/doc-writer.md"
+    allowed_tools:
+      - Glob
+      - Grep
+      - Read
+      - Write
+    templates:
+      - "API documentation"
+      - "Component documentation"
+      - "Feature documentation"
+      - "README generation"
+
+  # ---------------------------------------------------------------------------
+  # CLEANUP - Code hygiene and dead code removal
+  # ---------------------------------------------------------------------------
+  cleanup:
+    model: "sonnet"
+    description: "Removes dead code, unused imports, and enforces code style"
+    trigger: "/cleanup"
+    prompt_file: ".claude/commands/cleanup.md"
+    allowed_tools:
+      - Glob
+      - Grep
+      - Read
+      - Edit
+      - Bash
+    tasks:
+      - "Remove unused imports"
+      - "Remove console.log statements"
+      - "Remove dead code"
+      - "Fix formatting issues"
+      - "Remove duplicate files"
+
+  # ---------------------------------------------------------------------------
+  # DEPLOYER - Deployment preparation and validation
+  # ---------------------------------------------------------------------------
+  deployer:
+    model: "haiku"
+    description: "Prepares and validates deployments for each app"
+    trigger: "/deployer"
+    prompt_file: ".claude/commands/deployer.md"
+    allowed_tools:
+      - Glob
+      - Grep
+      - Read
+      - Bash
+    platforms:
+      - vercel
+      - railway
+      - docker
+
+  # ---------------------------------------------------------------------------
+  # DB-MANAGER - Database operations and migrations
+  # ---------------------------------------------------------------------------
+  db-manager:
+    model: "sonnet"
+    description: "Manages Prisma schema, migrations, and database operations"
+    trigger: "/db-manager"
+    prompt_file: ".claude/commands/db-manager.md"
+    allowed_tools:
+      - Glob
+      - Grep
+      - Read
+      - Write
+      - Bash
+    operations:
+      - "Schema changes"
+      - "Migration generation"
+      - "Seed data"
+      - "Database reset"
+
+  # ---------------------------------------------------------------------------
+  # UI-BUILDER - Component development for shared UI library
+  # ---------------------------------------------------------------------------
+  ui-builder:
+    model: "sonnet"
+    description: "Creates and manages shared UI components"
+    trigger: "/ui-builder"
+    prompt_file: ".claude/commands/ui-builder.md"
+    allowed_tools:
+      - Glob
+      - Grep
+      - Read
+      - Write
+    standards:
+      - "TypeScript interfaces"
+      - "Tailwind CSS styling"
+      - "Accessibility (WCAG 2.1)"
+      - "Responsive design"
+
+  # ---------------------------------------------------------------------------
+  # PERFORMANCE-OPTIMIZER - Bundle and runtime optimization
+  # ---------------------------------------------------------------------------
+  performance-optimizer:
+    model: "sonnet"
+    description: "Analyzes and optimizes app performance"
+    trigger: "/performance"
+    prompt_file: ".claude/commands/performance-optimizer.md"
+    allowed_tools:
+      - Glob
+      - Grep
+      - Read
+      - Bash
+    metrics:
+      - "Bundle size"
+      - "Lighthouse scores"
+      - "Core Web Vitals"
+      - "Database query optimization"
+
+# ============================================================================
+# WORKFLOWS
+# ============================================================================
+workflows:
+
+  # New feature development workflow
+  new-feature:
+    description: "End-to-end workflow for implementing a new feature"
+    file: ".claude/workflows/new-feature.md"
+    steps:
+      - architect
+      - implement
+      - tester
+      - reviewer
+      - deployer
+
+  # Database migration workflow
+  db-migration:
+    description: "Safe database migration workflow"
+    file: ".claude/workflows/db-migration.md"
+    steps:
+      - backup
+      - schema-change
+      - generate-migration
+      - test-migration
+      - deploy
+
+  # App deployment workflow
+  deploy-app:
+    description: "Deploy a single app from the monorepo"
+    file: ".claude/workflows/deploy-app.md"
+    steps:
+      - validate
+      - build
+      - test
+      - deploy
+      - verify
+
+  # Code review workflow
+  pr-review:
+    description: "Complete PR review workflow"
+    file: ".claude/workflows/pr-review.md"
+    steps:
+      - architect
+      - security-auditor
+      - reviewer
+      - tester
+
+# ============================================================================
+# MCP SERVERS
+# ============================================================================
+mcp_servers:
+  - name: "filesystem"
+    description: "File system operations"
+    enabled: true
+  - name: "fetch"
+    description: "HTTP requests"
+    enabled: true
+  - name: "memory"
+    description: "Persistent memory across sessions"
+    enabled: true
+  - name: "playwright"
+    description: "E2E testing automation"
+    enabled: true

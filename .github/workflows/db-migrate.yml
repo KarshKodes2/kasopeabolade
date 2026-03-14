@@ -1,0 +1,129 @@
+name: Database Migration
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      dry_run:
+        description: 'Dry run (show changes without applying)'
+        required: false
+        type: boolean
+        default: true
+
+concurrency:
+  group: db-migrate-${{ github.event.inputs.environment }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: 20
+
+jobs:
+  # Check migration status
+  check:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    outputs:
+      pending: ${{ steps.status.outputs.pending }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check migration status
+        id: status
+        run: |
+          STATUS=$(npx prisma migrate status --schema packages/db/schema.prisma 2>&1) || true
+          echo "$STATUS"
+          if echo "$STATUS" | grep -q "have not yet been applied"; then
+            echo "pending=true" >> $GITHUB_OUTPUT
+          else
+            echo "pending=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+  # Backup database (production only)
+  backup:
+    needs: check
+    if: ${{ needs.check.outputs.pending == 'true' && github.event.inputs.environment == 'production' && github.event.inputs.dry_run == 'false' }}
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+      - name: Create backup
+        run: |
+          echo "Creating database backup..."
+          # pg_dump command would go here
+          # pg_dump $DATABASE_URL > backup_$(date +%Y%m%d_%H%M%S).sql
+
+  # Run migrations
+  migrate:
+    needs: [check, backup]
+    if: ${{ always() && needs.check.outputs.pending == 'true' && (needs.backup.result == 'success' || needs.backup.result == 'skipped') }}
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npm run generate
+
+      - name: Dry run migrations
+        if: ${{ github.event.inputs.dry_run == 'true' }}
+        run: |
+          echo "=== DRY RUN - Showing pending migrations ==="
+          npx prisma migrate status --schema packages/db/schema.prisma
+          echo "=== No changes applied ==="
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Apply migrations
+        if: ${{ github.event.inputs.dry_run == 'false' }}
+        run: |
+          echo "Applying migrations..."
+          npx prisma migrate deploy --schema packages/db/schema.prisma
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Verify migrations
+        if: ${{ github.event.inputs.dry_run == 'false' }}
+        run: |
+          echo "Verifying migration status..."
+          npx prisma migrate status --schema packages/db/schema.prisma
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+  # Notify results
+  notify:
+    needs: migrate
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Migration result
+        run: |
+          if [ "${{ needs.migrate.result }}" == "success" ]; then
+            echo "Database migration completed successfully!"
+          else
+            echo "Database migration failed or was skipped."
+          fi

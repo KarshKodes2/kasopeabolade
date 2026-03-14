@@ -1,0 +1,6 @@
+{
+  "scripts": {
+    "install": "echo '✅ UI library installed. Ready for reuse across apps.'",
+    "build": "tsc --build"
+  }
+}
