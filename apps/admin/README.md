@@ -1,121 +1,105 @@
-# Admin Dashboard
+# Admin — Central Command Dashboard
 
-Internal admin interface for managing projects, bookings, and users with role-based access control.
+The super-admin dashboard for the entire Karsh Core Solutions monorepo. A single place to manage all four products: CrowdVibe tenants, portfolio projects, Karsh Core leads, and platform-wide configuration.
 
-## Features
+Access is restricted to `SUPER_ADMIN` role — GitHub OAuth sign-in gate enforced in `lib/auth.ts`.
 
-- Project management (CRUD operations)
-- Booking management for events
-- User management with RBAC
-- GitHub OAuth authentication
-- Multi-tenant support
+## Sections
+
+### CrowdVibe
+
+Manage the SaaS platform from the operator perspective.
+
+- **Tenants** — all subscribers with plan, status, booking count; actions: suspend, change plan
+- **Bookings** — all bookings cross-tenant in one table (client, event type, date, status)
+
+### Portfolio
+
+Manage the content shown on `kasope.dev`.
+
+- **Projects** — full CRUD on `Project` records (title, description, tags, featured image, live/draft toggle)
+
+### Karsh Core
+
+Manage inbound leads from `karshcoresolutions.com`.
+
+- **Leads** — CRM pipeline table (NEW → CONTACTED → PROPOSAL_SENT → NEGOTIATION → WON/LOST) with status colour coding
+
+### Overview
+
+Global stats pulled across all apps: active tenants, open leads, upcoming bookings, total projects.
 
 ## Tech Stack
 
-- **Framework**: Next.js 15 (App Router)
-- **Styling**: Tailwind CSS 4
-- **Auth**: NextAuth.js with GitHub OAuth
-- **Database**: Prisma + PostgreSQL
-- **Language**: TypeScript 5
+- **Framework** — Next.js 15 App Router
+- **Auth** — NextAuth v5 + `@auth/prisma-adapter` (GitHub OAuth, SUPER_ADMIN gate)
+- **Database** — Prisma 6 via `packages/db`
+- **Charts** — Recharts
+- **Styling** — Tailwind CSS 4
 
 ## Getting Started
 
-### Prerequisites
-
-Ensure the monorepo is set up:
-
 ```bash
-# From root directory
+# From monorepo root
 npm install
-npm run start:db
-npm run db:sync
+npm run dev:admin   # → http://localhost:3001
 ```
 
-### Development
-
-```bash
-# From root directory
-npm run dev:admin
-
-# Or from this directory
-npm run dev
-```
-
-The app will be available at `http://localhost:3000`.
-
-### Build
-
-```bash
-# From root directory
-npm run build:admin
-
-# Or from this directory
-npm run build
-```
-
-## Authentication
-
-This app uses NextAuth.js with GitHub OAuth provider.
-
-### Setup GitHub OAuth
-
-1. Go to GitHub Settings > Developer Settings > OAuth Apps
-2. Create a new OAuth App
-3. Set Homepage URL to `http://localhost:3000`
-4. Set Authorization callback URL to `http://localhost:3000/api/auth/callback/github`
-5. Add credentials to `.env`:
+## Environment Variables
 
 ```env
-GITHUB_ID="your_client_id"
-GITHUB_SECRET="your_client_secret"
-NEXTAUTH_SECRET="your_secret_key"
+NEXTAUTH_URL=http://localhost:3001
+NEXTAUTH_SECRET=
+
+GITHUB_ID=
+GITHUB_SECRET=
+
+# Same database as packages/db
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/karsh
 ```
 
 ## User Roles
 
-| Role | Permissions |
-|------|-------------|
-| `SUPER_ADMIN` | Full access to all features and settings |
-| `ADMIN` | Can manage content and users |
-| `MEMBER` | Limited content management |
-| `GUEST` | View only access |
+| Role | Access |
+| ---- | ------ |
+| `SUPER_ADMIN` | Full access — only role permitted to sign in |
+| `ADMIN` | Tenant-level admin (CrowdVibe dashboard, not this app) |
+| `MEMBER` | Standard tenant user |
+| `GUEST` | Read-only |
 
 ## Project Structure
 
 ```text
 apps/admin/
 ├── app/
-│   ├── layout.tsx      # Root layout
-│   ├── page.tsx        # Home page
-│   ├── globals.css     # Global styles
-│   └── api/            # API routes
-├── public/             # Static assets
-├── next.config.ts      # Next.js configuration
-├── tsconfig.json       # TypeScript configuration
+│   ├── (auth)/
+│   │   └── signin/page.tsx          # GitHub OAuth sign-in
+│   ├── (dashboard)/
+│   │   ├── layout.tsx               # Sidebar + auth guard
+│   │   ├── page.tsx                 # Global overview stats
+│   │   ├── crowdvibe/
+│   │   │   ├── tenants/page.tsx     # All CrowdVibe tenants
+│   │   │   └── bookings/page.tsx    # All bookings cross-tenant
+│   │   ├── portfolio/
+│   │   │   └── projects/page.tsx    # Portfolio project management
+│   │   └── karsh-core/
+│   │       └── leads/page.tsx       # Lead pipeline CRM
+│   ├── api/
+│   │   └── auth/[...nextauth]/      # NextAuth handler
+│   ├── layout.tsx
+│   ├── page.tsx                     # Redirects → /dashboard
+│   └── globals.css
+├── lib/
+│   └── auth.ts                      # NextAuth config + SUPER_ADMIN gate
 └── package.json
 ```
 
-## Available Scripts
+## Deployment
 
-| Script | Description |
-|--------|-------------|
-| `npm run dev` | Start development server with Turbopack |
-| `npm run build` | Build for production |
-| `npm run start` | Start production server |
-| `npm run lint` | Run ESLint |
-
-## Environment Variables
-
-| Variable | Description |
-|----------|-------------|
-| `DATABASE_URL` | PostgreSQL connection string |
-| `NEXTAUTH_URL` | Base URL for NextAuth |
-| `NEXTAUTH_SECRET` | Secret for NextAuth sessions |
-| `GITHUB_ID` | GitHub OAuth client ID |
-| `GITHUB_SECRET` | GitHub OAuth client secret |
+Deploy to **Railway** — it's an internal tool and Railway is more cost-effective than Vercel Pro for always-on server-rendered apps without edge routing requirements.
 
 ## Related
 
-- [Root README](../../README.md)
-- [Database Package](../../packages/db/README.md)
-- [UI Components](../../packages/ui/README.md)
+- [Monorepo root](../../README.md)
+- [CrowdVibe](../crowd-vibe/README.md) — the platform this dashboard manages
+- [Database schema](../../packages/db/README.md)

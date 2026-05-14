@@ -1,55 +1,53 @@
 # Karsh Core Solutions
 
-Corporate website for Karsh Core Solutions featuring products, services, and a tech blog.
+Corporate website for **Karsh Core Solutions** — a technology consulting and solutions company. Serves as the public face of the business and captures inbound leads via a contact/consultation form.
+
+Leads captured here appear in the Admin dashboard under **Karsh Core → Leads**, where they move through a CRM pipeline (NEW → CONTACTED → PROPOSAL_SENT → NEGOTIATION → WON/LOST).
 
 ## Features
 
-- Products and services showcase
-- Tech blog with markdown support
-- Contact and consultation forms
-- Company information
-- SEO-optimized pages
+- Company overview and services showcase
+- Technology consulting and product offerings
+- Case studies section
+- Blog / insights
+- Contact + consultation form — writes `Lead` records to the shared database
+- SEO-optimised with Open Graph tags, JSON-LD, sitemap, robots.txt
 
 ## Tech Stack
 
-- **Framework**: Next.js 15 (App Router)
-- **Styling**: Tailwind CSS 4
-- **Database**: Prisma + PostgreSQL
-- **Language**: TypeScript 5
+- **Framework** — Next.js 15 App Router
+- **Styling** — Tailwind CSS 4
+- **Database** — Prisma 6 via `packages/db` (Lead model)
+- **Language** — TypeScript 5 (strict)
 
 ## Getting Started
 
-### Prerequisites
-
-Ensure the monorepo is set up:
-
 ```bash
-# From root directory
+# From monorepo root
 npm install
-npm run start:db
-npm run db:sync
+npm run dev:karsh-core   # → http://localhost:3004
 ```
 
-### Development
+## Environment Variables
 
-```bash
-# From root directory
-npm run dev:karsh-core
+```env
+# Shared database URL (leads are stored here)
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/karsh
 
-# Or from this directory
-npm run dev
+# Optional: email notifications on new lead
+RESEND_API_KEY=
 ```
 
-The app will be available at `http://localhost:3000`.
+## Lead Flow
 
-### Build
-
-```bash
-# From root directory
-npm run build:karsh-core
-
-# Or from this directory
-npm run build
+```text
+Visitor fills consultation form
+        ↓
+POST /api/leads  →  prisma.lead.create({ status: 'NEW' })
+        ↓
+Lead appears in Admin → Karsh Core → Leads
+        ↓
+Status updated manually: CONTACTED → PROPOSAL_SENT → NEGOTIATION → WON / LOST
 ```
 
 ## Project Structure
@@ -57,66 +55,36 @@ npm run build
 ```text
 apps/karsh-core/
 ├── app/
-│   ├── layout.tsx      # Root layout
-│   ├── page.tsx        # Home page
-│   ├── globals.css     # Global styles
-│   ├── services/       # Services pages
-│   ├── products/       # Products pages
-│   ├── blog/           # Tech blog
-│   └── contact/        # Contact page
-├── public/             # Static assets
-├── next.config.ts      # Next.js configuration
-├── tsconfig.json       # TypeScript configuration
+│   ├── layout.tsx        # Root layout + global metadata
+│   ├── page.tsx          # Home — company overview
+│   ├── globals.css       # Global styles
+│   ├── services/         # Services offered
+│   ├── products/         # Products showcase (CrowdVibe featured)
+│   ├── blog/             # Insights and tech blog
+│   ├── case-studies/     # Client work
+│   └── contact/          # Consultation form → Lead capture
+├── public/
 └── package.json
 ```
-
-## Available Scripts
-
-| Script | Description |
-|--------|-------------|
-| `npm run dev` | Start development server with Turbopack |
-| `npm run build` | Build for production |
-| `npm run start` | Start production server |
-| `npm run lint` | Run ESLint |
 
 ## Pages
 
 | Route | Description |
-|-------|-------------|
-| `/` | Home page with company overview |
-| `/services` | Services offered |
-| `/products` | Products showcase |
-| `/blog` | Tech blog |
-| `/blog/[slug]` | Individual blog post |
-| `/about` | About the company |
-| `/contact` | Contact and consultation form |
+| ----- | ----------- |
+| `/` | Home — company overview and value proposition |
+| `/services` | Technology consulting, product development, etc. |
+| `/products` | Products built by Karsh Core (incl. CrowdVibe) |
+| `/blog` | Tech blog and insights |
+| `/blog/[slug]` | Individual post |
+| `/case-studies` | Client work and outcomes |
+| `/contact` | Consultation form (writes Lead to DB) |
 
-## Content Management
+## Deployment
 
-Content can be managed through:
-
-1. **Markdown files** - For blog posts
-2. **Database** - Via Admin dashboard
-3. **CMS integration** - Planned for future
-
-## Environment Variables
-
-| Variable | Description |
-|----------|-------------|
-| `DATABASE_URL` | PostgreSQL connection string |
-
-## SEO
-
-The site is optimized for search engines with:
-
-- Semantic HTML structure
-- Open Graph meta tags
-- Structured data (JSON-LD)
-- Sitemap generation
-- robots.txt
+Deploy to **Vercel** (free tier — near-static, no edge routing needed).
 
 ## Related
 
-- [Root README](../../README.md)
-- [Database Package](../../packages/db/README.md)
-- [UI Components](../../packages/ui/README.md)
+- [Monorepo root](../../README.md)
+- [Admin dashboard](../admin/README.md) — view and manage captured leads
+- [Database schema](../../packages/db/README.md)

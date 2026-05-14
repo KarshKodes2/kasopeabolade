@@ -1,171 +1,141 @@
-# Utilities Package
+# packages/utils
 
-Shared utility functions and helpers for the monorepo applications.
+Shared utility functions for the Karsh Core Solutions monorepo. Covers role-based access control, Zod validation schemas for all API inputs, and tenant database helpers.
 
-## Overview
-
-This package provides common utilities including:
-
-- Role-Based Access Control (RBAC)
-- Validation schemas (planned)
-- Helper functions
-
-## Tech Stack
-
-- **Language**: TypeScript 5
-- **Dependencies**: @prisma/client (for Role enum)
-
-## Installation
-
-This package is automatically available to all apps in the monorepo via npm workspaces.
-
-## Utilities
-
-### Role-Based Access Control (RBAC)
-
-The RBAC module provides functions to check and enforce user permissions based on roles.
-
-#### Available Roles
+## Usage
 
 ```typescript
-enum Role {
-  SUPER_ADMIN = 'SUPER_ADMIN',
-  ADMIN = 'ADMIN',
-  MEMBER = 'MEMBER',
-  GUEST = 'GUEST',
-}
+import { hasAccess, assertAccess } from 'utils/rbac';
+import { BookingCreateSchema, LeadSchema } from 'utils/validation';
+import { getTenantBySlug, getBookedDates } from 'utils/tenant';
 ```
 
-#### Functions
+## RBAC — `rbac.ts`
 
-##### hasAccess
+Role hierarchy: `SUPER_ADMIN` > `ADMIN` > `MEMBER` > `GUEST`.
 
-Checks if a user role is included in the required roles.
+### `hasAccess(userRole, allowedRoles)`
+
+Returns `true` if the user's role is in the allowed set.
 
 ```typescript
-import { hasAccess } from '@karsh/utils/rbac';
+import { hasAccess } from 'utils/rbac';
 import { Role } from '@prisma/client';
 
-const userRole = Role.ADMIN;
-const requiredRoles = [Role.SUPER_ADMIN, Role.ADMIN];
-
-if (hasAccess(userRole, requiredRoles)) {
-  // User has access
+if (hasAccess(session.user.role, [Role.SUPER_ADMIN, Role.ADMIN])) {
+  // show admin UI
 }
 ```
 
-##### assertAccess
+### `assertAccess(userRole, allowedRoles)`
 
-Throws an error if the user doesn't have the required role.
+Throws an `UnauthorizedError` if access is denied. Use in API routes.
 
 ```typescript
-import { assertAccess } from '@karsh/utils/rbac';
+import { assertAccess } from 'utils/rbac';
 import { Role } from '@prisma/client';
 
-function adminOnlyAction(userRole: Role) {
-  assertAccess(userRole, [Role.SUPER_ADMIN, Role.ADMIN]);
-
-  // Proceed with admin action
+export async function POST() {
+  const session = await auth();
+  assertAccess(session.user.role, [Role.SUPER_ADMIN]);
+  // proceed
 }
 ```
 
-## Usage Examples
+## Validation — `validation.ts`
 
-### Protecting API Routes
+Zod schemas for every data input boundary. Import the schema, parse the request body, and get fully typed output.
+
+### `BookingCreateSchema`
+
+Validates the 5-step booking wizard submission.
+
+Key fields: `tenantId`, `eventType`, `eventDate`, `clientName`, `clientEmail`, `clientPhone`, `venue`, `guestCount`, `services[]`, `paymentMethod`.
+
+### `TenantOnboardingSchema`
+
+Validates the CrowdVibe sign-up form.
+
+Key fields: `name`, `slug` (lowercase, alphanumeric + hyphens only), `email`.
+
+### `TenantSettingsSchema`
+
+Validates tenant brand/profile settings updates.
+
+Key fields: `name`, `bio`, `brandColor` (hex), `accentColor` (hex), `customDomain`, social link handles.
+
+### `MediaUploadSchema`
+
+Validates media asset metadata on upload.
+
+Key fields: `title`, `type` (MediaType), `url`, `thumbnailUrl`, `duration`.
+
+### `LeadSchema`
+
+Validates Karsh Core contact form submissions.
+
+Key fields: `contactName`, `email`, `companyName`, `projectType`, `budget`, `message`.
+
+### Example usage in an API route
 
 ```typescript
-import { assertAccess } from '@karsh/utils/rbac';
-import { Role } from '@prisma/client';
+import { BookingCreateSchema } from 'utils/validation';
 
-export async function POST(request: Request) {
-  const session = await getSession();
-
-  // Only admins can create projects
-  assertAccess(session.user.role, [Role.SUPER_ADMIN, Role.ADMIN]);
-
-  // Create project logic
+export async function POST(req: Request) {
+  const body = await req.json();
+  const data = BookingCreateSchema.parse(body); // throws ZodError on invalid input
+  await prisma.booking.create({ data });
 }
 ```
 
-### Conditional UI Rendering
+## Tenant Helpers — `tenant.ts`
+
+Database query helpers shared across CrowdVibe's middleware, API routes, and server components.
+
+### `getTenantBySlug(slug)`
 
 ```typescript
-import { hasAccess } from '@karsh/utils/rbac';
-import { Role } from '@prisma/client';
-
-function Dashboard({ userRole }: { userRole: Role }) {
-  const canManageUsers = hasAccess(userRole, [Role.SUPER_ADMIN]);
-
-  return (
-    <div>
-      <h1>Dashboard</h1>
-      {canManageUsers && <UserManagement />}
-    </div>
-  );
-}
+const tenant = await getTenantBySlug('dj-randy');
 ```
 
-### Role Hierarchy (Usage Pattern)
+### `getTenantByDomain(domain)`
+
+Used by `middleware.ts` to resolve custom domains. Only returns `ACTIVE` tenants.
 
 ```typescript
-const ROLE_HIERARCHY = {
-  [Role.SUPER_ADMIN]: [Role.SUPER_ADMIN, Role.ADMIN, Role.MEMBER, Role.GUEST],
-  [Role.ADMIN]: [Role.ADMIN, Role.MEMBER, Role.GUEST],
-  [Role.MEMBER]: [Role.MEMBER, Role.GUEST],
-  [Role.GUEST]: [Role.GUEST],
-};
+const tenant = await getTenantByDomain('djrandyuniverse.com');
+```
 
-// Super admin can do everything
-hasAccess(Role.SUPER_ADMIN, ROLE_HIERARCHY[Role.ADMIN]); // true
+### `getTenantWithMedia(slug)`
 
-// Guest can only do guest things
-hasAccess(Role.GUEST, ROLE_HIERARCHY[Role.ADMIN]); // false
+Returns the tenant with their media assets (mixes, photos, videos) pre-joined. Used by the public tenant landing page.
+
+```typescript
+const tenant = await getTenantWithMedia('dj-randy');
+// tenant.mediaAssets → sorted by featured desc, publishedAt desc
+```
+
+### `getBookedDates(tenantId)`
+
+Returns an array of ISO date strings (`'YYYY-MM-DD'`) for dates with confirmed/paid bookings. Used by the booking wizard calendar to block already-booked dates.
+
+```typescript
+const blocked = await getBookedDates(tenant.id);
+// ['2025-09-14', '2025-10-31', ...]
 ```
 
 ## Project Structure
 
 ```text
 packages/utils/
-├── rbac.ts             # Role-based access control
-├── validation.ts       # Validation schemas (planned)
-└── index.ts            # Package exports
-```
-
-## Planned Utilities
-
-### Validation Schemas
-
-Zod schemas for validating API inputs:
-
-```typescript
-// Planned: packages/utils/validation.ts
-import { z } from 'zod';
-
-export const projectSchema = z.object({
-  title: z.string().min(1).max(100),
-  slug: z.string().regex(/^[a-z0-9-]+$/),
-  description: z.string().min(10),
-});
-
-export const bookingSchema = z.object({
-  eventDate: z.date(),
-  clientName: z.string().min(1),
-});
-```
-
-### Helper Functions
-
-Common helper functions:
-
-```typescript
-// Planned utilities
-export function slugify(text: string): string;
-export function formatDate(date: Date, format?: string): string;
-export function generateId(): string;
+├── rbac.ts          # hasAccess + assertAccess
+├── validation.ts    # Zod schemas + TypeScript type exports
+├── tenant.ts        # Tenant query helpers (getTenantBySlug, etc.)
+├── index.ts         # Barrel export (all three modules)
+└── package.json
 ```
 
 ## Related
 
-- [Root README](../../README.md)
-- [Database Package](../db/README.md) - For Role enum
-- [Admin Dashboard](../../apps/admin/README.md) - Primary RBAC consumer
+- [Monorepo root](../../README.md)
+- [Database schema](../db/README.md)

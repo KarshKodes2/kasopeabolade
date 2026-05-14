@@ -1,188 +1,131 @@
-# Database Package
+# packages/db
 
-Centralized Prisma schema, migrations, and database utilities for the monorepo.
-
-## Overview
-
-This package provides:
-
-- Prisma schema and migrations
-- Singleton Prisma client with query logging
-- Multi-tenant middleware for data isolation
-- Database seeding utilities
-
-## Tech Stack
-
-- **ORM**: Prisma 6.11
-- **Database**: PostgreSQL 15
-- **Runtime**: tsx for TypeScript execution
-
-## Installation
-
-This package is automatically installed as part of the monorepo setup:
-
-```bash
-# From root directory
-npm install
-npm run start:db
-npm run db:sync
-```
-
-## Database Schema
-
-### Enums
-
-```sql
-Role: SUPER_ADMIN | ADMIN | MEMBER | GUEST
-```
-
-### Models
-
-#### User
-
-| Column | Type | Description |
-|--------|------|-------------|
-| id | TEXT | Primary key |
-| name | TEXT | User's display name |
-| email | TEXT | Unique email address |
-| image | TEXT | Profile image URL |
-| role | Role | User role (default: GUEST) |
-| tenantId | TEXT | Foreign key to Tenant |
-| createdAt | TIMESTAMP | Creation timestamp |
-
-#### Project
-
-| Column | Type | Description |
-|--------|------|-------------|
-| id | TEXT | Primary key |
-| title | TEXT | Project title |
-| slug | TEXT | URL-friendly slug (unique) |
-| description | TEXT | Project description |
-| featuredImg | TEXT | Featured image URL |
-| createdById | TEXT | Foreign key to User |
-| tenantId | TEXT | Foreign key to Tenant |
-| createdAt | TIMESTAMP | Creation timestamp |
-| updatedAt | TIMESTAMP | Last update timestamp |
-
-#### Booking
-
-| Column | Type | Description |
-|--------|------|-------------|
-| id | TEXT | Primary key |
-| eventDate | TIMESTAMP | Date of the event |
-| clientName | TEXT | Client's name |
-| status | TEXT | Booking status (default: pending) |
-| userId | TEXT | Foreign key to User |
-| createdAt | TIMESTAMP | Creation timestamp |
-
-#### Tenant
-
-| Column | Type | Description |
-|--------|------|-------------|
-| id | TEXT | Primary key |
-| name | TEXT | Tenant name (unique) |
-
-#### NextAuth Models
-
-- **Account** - OAuth provider information
-- **Session** - User sessions
-- **VerificationToken** - Email verification tokens
+Centralised Prisma 6 schema, migrations, and database client for the entire monorepo. Every app that touches PostgreSQL imports from this package.
 
 ## Usage
 
-### Import Prisma Client
-
 ```typescript
-import { prisma } from 'db/lib/prisma';
+import { prisma } from 'db';
 
-// Query examples
-const users = await prisma.user.findMany();
-const project = await prisma.project.create({
-  data: {
-    title: 'My Project',
-    slug: 'my-project',
-    description: 'A new project',
-  },
-});
+const tenants = await prisma.tenant.findMany({ where: { status: 'ACTIVE' } });
 ```
 
-### Multi-Tenant Queries
-
-The Prisma client includes middleware for tenant isolation on Project and Booking models:
-
-```typescript
-// The middleware automatically filters by tenantId
-// when configured with the current user's session
-```
-
-## Available Scripts
-
-| Script | Description |
-|--------|-------------|
-| `npm run seed` | Seed database with test data |
-| `npm run reset` | Reset database and re-seed |
-| `npm run generate` | Generate Prisma client |
-| `npm run sync` | Run migrations and generate client |
-| `npm run migrate` | Deploy migrations |
-| `npm run studio` | Open Prisma Studio GUI |
-
-## Running from Root
+## Important — Always use workspace-pinned Prisma v6
 
 ```bash
-npm run db:sync      # Run migrations and generate client
-npm run db:studio    # Open Prisma Studio
-npm run db:reset     # Reset database and re-seed
-npm run seed         # Seed database
-npm run generate     # Generate Prisma client
+# Correct — uses the pinned v6.x from this package's package.json
+npm run db:sync
+npm run --workspace=db generate
+
+# Wrong — fetches the latest Prisma (currently v7) which has breaking changes
+npx prisma generate
 ```
+
+## Scripts
+
+| Command (from root) | Description |
+| ------------------- | ----------- |
+| `npm run db:sync` | Run pending migrations + generate Prisma client |
+| `npm run db:studio` | Open Prisma Studio GUI |
+| `npm run db:reset` | Reset database and re-seed |
+| `npm run generate` | Generate Prisma client only (no migration) |
+| `npm run seed` | Seed with test data |
+
+## Environment Variables
+
+```env
+# packages/db/.env
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/karsh
+```
+
+## Schema Overview
+
+Full schema at [`schema.prisma`](./schema.prisma).
+
+### Enums
+
+| Enum | Values |
+| ---- | ------ |
+| `Role` | `SUPER_ADMIN` · `ADMIN` · `MEMBER` · `GUEST` |
+| `TenantPlan` | `FREE` · `STARTER` · `PRO` · `ENTERPRISE` |
+| `TenantStatus` | `ACTIVE` · `SUSPENDED` · `CANCELLED` |
+| `EventType` | `WEDDING` · `CORPORATE` · `CLUB_NIGHT` · `FESTIVAL` · `BIRTHDAY` · `CONCERT` · `PRIVATE_PARTY` · `OTHER` |
+| `BookingStatus` | `PENDING` · `QUOTE_SENT` · `CONFIRMED` · `DEPOSIT_PAID` · `PAID` · `CANCELLED` · `COMPLETED` |
+| `ServiceType` | `DJ_SET` · `MC_HOST` · `SOUND_SYSTEM` · `LIGHTING` · `PHOTO_BOOTH` · `LIVE_BAND` · `OTHER` |
+| `MediaType` | `MIX` · `TRACK` · `VIDEO` · `PHOTO` · `PODCAST` |
+| `LeadStatus` | `NEW` · `CONTACTED` · `PROPOSAL_SENT` · `NEGOTIATION` · `WON` · `LOST` |
+| `SubscriptionStatus` | `TRIALING` · `ACTIVE` · `PAST_DUE` · `CANCELLED` · `UNPAID` |
+
+### Core Models
+
+#### Tenant
+
+The central multi-tenancy unit. Each entertainer who subscribes to CrowdVibe gets one `Tenant` record.
+
+Key fields: `slug` (URL identifier), `customDomain`, `brandColor`, `accentColor`, `logoUrl`, `heroImageUrl`, `bio`, `location`, `plan`, `status`, social links (`instagramUrl`, `tiktokUrl`, `youtubeUrl`, `audiomackUrl`, `soundcloudUrl`).
+
+#### User
+
+Platform users. `tenantId` is optional — `SUPER_ADMIN` users have no tenant.
+
+Key fields: `email`, `role`, `tenantId?`.
+
+#### Booking
+
+A booking request against a tenant. Full event details including payment tracking.
+
+Key fields: `tenantId`, `clientName`, `clientEmail`, `clientPhone`, `eventType`, `eventDate`, `startTime`, `endTime`, `venue`, `venueAddress`, `guestCount`, `services[]`, `basePrice`, `totalPrice`, `depositAmount`, `depositPaid`, `paystackRef`, `stripePaymentId`, `status`, `adminNotes`.
+
+#### MediaAsset
+
+Audio, video, and photo assets uploaded to Cloudinary by a tenant.
+
+Key fields: `tenantId`, `title`, `type` (MediaType), `url`, `thumbnailUrl`, `duration`, `featured`.
+
+#### Lead
+
+Inbound enquiry from the Karsh Core Solutions contact form.
+
+Key fields: `contactName`, `email`, `companyName`, `projectType`, `budget`, `message`, `status` (LeadStatus).
+
+#### Subscription
+
+Stripe subscription record linked to a tenant.
+
+Key fields: `tenantId`, `plan`, `status`, `stripeSubscriptionId`, `stripeCustomerId`, `currentPeriodEnd`, `cancelAtPeriodEnd`.
+
+#### Project
+
+Portfolio project managed via the admin dashboard and displayed on `kasope.dev`.
+
+Key fields: `title`, `slug`, `description`, `featuredImg`, `tags[]`, `liveUrl`, `repoUrl`, `published`.
+
+#### NextAuth Models
+
+`Account`, `Session`, `VerificationToken` — standard NextAuth v5 Prisma adapter models.
 
 ## Project Structure
 
 ```text
 packages/db/
+├── schema.prisma       # Full multi-tenant SaaS schema
+├── migrations/         # Prisma migration history
 ├── lib/
-│   └── prisma.ts       # Prisma client singleton
-├── migrations/
-│   ├── 20250712182950_init/
-│   │   └── migration.sql
-│   └── 20250714064112_make_tenant_name_unique/
-│       └── migration.sql
-├── index.ts            # Package exports
-├── prisma-env.ts       # Environment loader
-├── seed.ts             # Database seeding
+│   └── prisma.ts       # Singleton Prisma client
+├── index.ts            # Package exports (re-exports prisma + PrismaClient)
+├── seed.ts             # Test data seeder
 └── package.json
 ```
 
-## Environment Variables
-
-| Variable | Description |
-|----------|-------------|
-| DATABASE_URL | PostgreSQL connection string |
-
-Example:
-
-```env
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/karsh"
-```
-
-## Migrations
-
-### Creating a New Migration
+## Creating a Migration
 
 ```bash
-# From packages/db directory
-npx prisma migrate dev --name your_migration_name
-```
-
-### Applying Migrations
-
-```bash
-# From root directory
-npm run db:sync
+# From the monorepo root — do NOT cd into packages/db
+npm run --workspace=db migrate -- --name your_migration_name
 ```
 
 ## Related
 
-- [Root README](../../README.md)
-- [Admin Dashboard](../../apps/admin/README.md)
-- [Docker Compose](../../docker-compose.yml)
+- [Monorepo root](../../README.md)
+- [CrowdVibe](../../apps/crowd-vibe/README.md)
+- [Admin dashboard](../../apps/admin/README.md)

@@ -1,37 +1,53 @@
-# Kasope Abolade Monorepo
+# Kasope Abolade — Karsh Core Solutions Monorepo
 
-A full-stack Next.js monorepo powering multiple personal brand and business applications with shared infrastructure.
+A full-stack Next.js monorepo powering four production products under the **Karsh Core Solutions** brand. One codebase, one database, shared infrastructure.
+
+## Products
+
+| App | Port | URL | Purpose |
+| --- | ---- | --- | ------- |
+| [crowd-vibe](./apps/crowd-vibe/) | 3003 | crowdvibe.io | Multi-tenant SaaS — entertainment booking platform for DJs, MCs, and event hosts |
+| [admin](./apps/admin/) | 3001 | admin.karshcoresolutions.com | Super-admin central command for all apps |
+| [portfolio](./apps/portfolio/) | 3002 | kasope.dev | Kasope's public developer portfolio |
+| [karsh-core](./apps/karsh-core/) | 3004 | karshcoresolutions.com | Karsh Core Solutions corporate site + lead capture |
 
 ## Architecture
 
 ```
 kasopeabolade/
 ├── apps/
-│   ├── admin/          # Internal dashboard for content management
-│   ├── portfolio/      # Public portfolio and blog site
-│   ├── dj-karsh/       # DJ Karsh entertainment booking platform
-│   └── karsh-core/     # Karsh Core Solutions corporate site
+│   ├── crowd-vibe/     # CrowdVibe SaaS platform (multi-tenant)
+│   ├── admin/          # Super-admin dashboard (manages all apps)
+│   ├── portfolio/      # Public developer portfolio
+│   └── karsh-core/     # Corporate site + CRM lead capture
 ├── packages/
-│   ├── db/             # Prisma schema, migrations, database client
-│   ├── ui/             # Shared UI component library
-│   ├── utils/          # Shared utilities (RBAC, validation)
-│   └── config/         # Shared ESLint, Prettier, Tailwind configs
+│   ├── db/             # Prisma 6 schema + PostgreSQL client
+│   ├── ui/             # Shared component library (9 components)
+│   └── utils/          # RBAC, Zod schemas, tenant helpers
 ├── scripts/            # Database and setup scripts
-└── e2e/                # Playwright end-to-end tests
+├── e2e/                # Playwright end-to-end tests
+├── .github/workflows/  # CI/CD pipelines
+└── turbo.json          # Turbo task pipeline
 ```
 
 ## Tech Stack
 
 | Category | Technology |
-|----------|------------|
-| **Framework** | Next.js 15 (App Router), React 19 |
-| **Styling** | Tailwind CSS 4 |
-| **Database** | PostgreSQL 15, Prisma 6 |
-| **Auth** | NextAuth.js (GitHub OAuth) |
-| **Build** | Turbo 2.5, npm workspaces |
-| **Language** | TypeScript 5 (strict mode) |
-| **Testing** | Playwright |
-| **Container** | Docker Compose |
+| -------- | ---------- |
+| Framework | Next.js 15 (App Router), React 19 |
+| Language | TypeScript 5 (strict) |
+| Styling | Tailwind CSS 4 |
+| Database | PostgreSQL 15 + Prisma 6 |
+| Auth | NextAuth.js v5 (GitHub OAuth + email magic link) |
+| Build | Turbo 2.5 + npm workspaces |
+| Payments | Paystack (₦ Nigeria/Africa) + Stripe (international) |
+| Media | Cloudinary (images, audio, video) |
+| Email | Resend (transactional emails) |
+| Animation | Framer Motion 12 |
+| Audio | Wavesurfer.js 7 (waveform players) |
+| Validation | Zod 3 + React Hook Form |
+| State | Zustand 5 (booking wizard) |
+| Testing | Playwright (E2E) |
 
 ## Quick Start
 
@@ -39,223 +55,188 @@ kasopeabolade/
 
 - Node.js 20+
 - npm 8.5+
-- Docker (for PostgreSQL)
+- Docker (for local PostgreSQL) or a Neon/Railway database URL
 
 ### Installation
 
 ```bash
-# Clone the repository
-git clone <repository-url>
+git clone https://github.com/KarshKodes2/kasopeabolade.git
 cd kasopeabolade
-
-# Install dependencies (creates .env from .env.example)
 npm install
-
-# Start PostgreSQL container
-npm run start:db
-
-# Generate Prisma client and sync database
-npm run db:sync
-
-# Seed the database with test data
-npm run seed
-
-# Start all apps in development mode
-npm run dev
 ```
-
-### Environment Variables
-
-Copy `.env.example` to `.env` and configure:
-
-```env
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/karsh"
-NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="your-secret-key"
-GITHUB_ID="your_github_client_id"
-GITHUB_SECRET="your_github_secret"
-```
-
-## Available Scripts
-
-### Development
-
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start all apps in development mode |
-| `npm run dev:admin` | Start admin app only |
-| `npm run dev:portfolio` | Start portfolio app only |
-| `npm run dev:dj-karsh` | Start dj-karsh app only |
-| `npm run dev:karsh-core` | Start karsh-core app only |
-
-### Build
-
-| Command | Description |
-|---------|-------------|
-| `npm run build` | Build all apps for production |
-| `npm run build:admin` | Build admin app only |
-| `npm run build:portfolio` | Build portfolio app only |
-| `npm run build:dj-karsh` | Build dj-karsh app only |
-| `npm run build:karsh-core` | Build karsh-core app only |
 
 ### Database
 
+```bash
+# Start local PostgreSQL via Docker
+npm run start:db
+
+# Run migrations and generate Prisma client
+# IMPORTANT: always use this, never npx prisma (fetches v7)
+npm run db:sync
+
+# Seed with test data (optional)
+npm run seed
+```
+
+### Development
+
+```bash
+npm run dev              # All apps in parallel
+npm run dev:crowd-vibe   # CrowdVibe only  → localhost:3003
+npm run dev:admin        # Admin only      → localhost:3001
+npm run dev:portfolio    # Portfolio only  → localhost:3002
+npm run dev:karsh-core   # Karsh Core only → localhost:3004
+```
+
+## Environment Variables
+
+Each app has its own `.env.local`. The database URL is shared via `packages/db/.env`.
+
+### `packages/db/.env`
+
+```env
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/karsh
+```
+
+### `apps/crowd-vibe/.env.local`
+
+```env
+NEXTAUTH_URL=http://localhost:3003
+NEXTAUTH_SECRET=
+GITHUB_ID=
+GITHUB_SECRET=
+PAYSTACK_SECRET_KEY=sk_live_...
+PAYSTACK_PUBLIC_KEY=pk_live_...
+STRIPE_SECRET_KEY=sk_live_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+RESEND_API_KEY=
+NEXT_PUBLIC_APP_URL=https://crowdvibe.io
+```
+
+### `apps/admin/.env.local`
+
+```env
+NEXTAUTH_URL=http://localhost:3001
+NEXTAUTH_SECRET=
+GITHUB_ID=
+GITHUB_SECRET=
+DATABASE_URL=  # same as packages/db/.env
+```
+
+## Scripts Reference
+
+### Dev scripts
+
 | Command | Description |
-|---------|-------------|
+| ------- | ----------- |
+| `npm run dev` | Start all apps (Turbo parallel) |
+| `npm run dev:crowd-vibe` | CrowdVibe on port 3003 |
+| `npm run dev:admin` | Admin on port 3001 |
+| `npm run dev:portfolio` | Portfolio on port 3002 |
+| `npm run dev:karsh-core` | Karsh Core on port 3004 |
+
+### Build scripts
+
+| Command | Description |
+| ------- | ----------- |
+| `npm run build` | Production build all apps |
+| `npm run build:crowd-vibe` | Build CrowdVibe |
+| `npm run build:admin` | Build admin |
+| `npm run build:portfolio` | Build portfolio |
+
+### Database scripts
+
+| Command | Description |
+| ------- | ----------- |
 | `npm run start:db` | Start PostgreSQL Docker container |
-| `npm run db:sync` | Run migrations and generate Prisma client |
+| `npm run db:sync` | Run migrations + generate Prisma client |
 | `npm run db:studio` | Open Prisma Studio GUI |
 | `npm run db:reset` | Reset database and re-seed |
-| `npm run seed` | Seed database with test data |
-| `npm run generate` | Generate Prisma client |
+| `npm run generate` | Generate Prisma client only |
+| `npm run seed` | Seed with test data |
 
 ### Code Quality
 
 | Command | Description |
-|---------|-------------|
-| `npm run lint` | Lint all packages with ESLint |
-| `npm run format` | Format code with Prettier |
-| `npm run check-types` | Run TypeScript type checking |
+| ------- | ----------- |
+| `npm run lint` | ESLint all packages |
+| `npm run format` | Prettier format all |
+| `npm run check-types` | TypeScript check (per-app via Turbo) |
+| `npm run e2e` | Playwright E2E tests |
 
-### Testing
+## CrowdVibe — Multi-Tenant Architecture
 
-| Command | Description |
-|---------|-------------|
-| `npm run e2e` | Run Playwright E2E tests |
+CrowdVibe is the flagship product. Entertainers subscribe and get a fully branded public booking site under their own custom domain.
 
-## Apps
+### How domain routing works
 
-| App | Description | Documentation |
-|-----|-------------|---------------|
-| **admin** | Internal dashboard for managing projects, bookings (DJ and Tech consults), and users (multi-tenancy) | [README](./apps/admin/README.md) |
-| **portfolio** | Public-facing portfolio showcasing projects and blog | [README](./apps/portfolio/README.md) |
-| **dj-karsh** | DJ Karsh entertainment booking and portfolio platform (content-creation, mixtapes and personal promotions) | [README](./apps/dj-karsh/README.md) |
-| **karsh-core** | Karsh Core Solutions corporate website (tech-consulting and solutions) | [README](./apps/karsh-core/README.md) |
+```
+djrandyuniverse.com  ──────┐
+dj-randy.crowdvibe.io ─────┤──▶  middleware.ts (Edge)  ──▶  /site/dj-randy/...
+                           │         ↓
+                     DB lookup: tenant by customDomain / slug
+```
 
-## Packages
+The URL shown to visitors never changes — `djrandyuniverse.com` stays in the browser bar. The `middleware.ts` transparently rewrites the request at Vercel's edge.
 
-| Package | Description | Documentation |
-|---------|-------------|---------------|
-| **db** | Prisma schema, migrations, and database utilities | [README](./packages/db/README.md) |
-| **ui** | Shared React UI components | [README](./packages/ui/README.md) |
-| **utils** | Shared utilities including RBAC | [README](./packages/utils/README.md) |
-| **config** | Shared ESLint, Prettier, and Tailwind configurations | — |
+### Tenant public site structure
+
+```
+/site/[slug]/           ← Landing page (hero, services, mixes, gallery)
+/site/[slug]/book       ← 5-step booking wizard (Paystack/Stripe payment)
+/site/[slug]/gallery    ← Full media gallery + waveform players
+/site/[slug]/press      ← Digital EPK
+```
 
 ## Database Schema
 
-The database supports multi-tenancy with the following models:
+The full multi-tenant SaaS schema lives in [`packages/db/schema.prisma`](./packages/db/schema.prisma).
 
-```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   Tenant    │────<│    User     │────<│   Project   │
-└─────────────┘     └─────────────┘     └─────────────┘
-                           │
-                           │
-                    ┌──────┴──────┐
-                    │             │
-              ┌─────┴─────┐ ┌─────┴─────┐
-              │  Booking  │ │  Account  │
-              └───────────┘ └───────────┘
-```
+**Key models:** `Tenant`, `User`, `Booking`, `MediaAsset`, `Lead`, `Subscription`, `Project`
 
-### Models
+**Enums:** `Role`, `TenantPlan` (FREE/STARTER/PRO/ENTERPRISE), `TenantStatus`, `EventType`, `BookingStatus`, `ServiceType`, `MediaType`, `LeadStatus`, `SubscriptionStatus`
 
-- **User** - Users with roles (SUPER_ADMIN, ADMIN, MEMBER, GUEST)
-- **Project** - Portfolio projects with tenant isolation
-- **Booking** - Event bookings for DJ services
-- **Tenant** - Multi-tenancy support
-- **Account/Session/VerificationToken** - NextAuth authentication
+## Architecture Rules
 
-## Project Structure
+1. Apps import only from `packages/*` — never from each other
+2. All DB access goes through `packages/db`
+3. Shared UI lives in `packages/ui`
+4. Shared logic (RBAC, validation, tenant helpers) lives in `packages/utils`
+5. Always use workspace-pinned Prisma v6: `npm run --workspace=db generate` — never `npx prisma generate`
 
-```
-├── apps/
-│   ├── admin/
-│   │   ├── app/              # Next.js App Router pages
-│   │   ├── public/           # Static assets
-│   │   └── package.json
-│   ├── portfolio/
-│   │   ├── app/
-│   │   ├── public/
-│   │   └── package.json
-│   ├── dj-karsh/
-│   │   ├── app/
-│   │   ├── public/
-│   │   └── package.json
-│   └── karsh-core/
-│       ├── app/
-│       ├── public/
-│       └── package.json
-├── packages/
-│   ├── db/
-│   │   ├── schema.prisma     # Database schema
-│   │   ├── migrations/       # Prisma migrations
-│   │   ├── lib/prisma.ts     # Prisma client singleton
-│   │   └── seed.ts           # Database seeding
-│   ├── ui/
-│   │   └── components/       # Shared UI components
-│   ├── utils/
-│   │   └── rbac.ts           # Role-based access control
-│   └── config/
-│       ├── eslint/
-│       ├── prettier/
-│       └── tailwind/
-├── scripts/
-│   ├── db-start.sh           # PostgreSQL container script
-│   └── postinstall.js        # Post-install setup
-├── e2e/
-│   └── tests/                # Playwright test files
-├── .github/
-│   └── workflows/            # CI/CD pipelines
-├── docker-compose.yml
-├── turbo.json
-├── tsconfig.base.json
-└── package.json
-```
+## Deployment
+
+| App | Platform | Reason |
+| --- | -------- | ------ |
+| crowd-vibe | Vercel | Edge middleware required for custom domain multi-tenancy |
+| portfolio | Vercel | Free tier, near-static |
+| karsh-core | Vercel | Free tier |
+| admin | Railway | Internal tool, more cost-effective than Vercel Pro |
+| PostgreSQL | Neon | Serverless Postgres with built-in connection pooling; Vercel-native integration |
 
 ## CI/CD
 
-GitHub Actions workflows are configured for:
+GitHub Actions workflows in `.github/workflows/`:
 
-| Workflow | Trigger | Actions |
-|----------|---------|---------|
-| `dj-karsh.yml` | Push to `apps/dj-karsh/**` | Lint, Build |
-| `portfolio.yml` | Push to `apps/portfolio/**` | Lint, Build |
+| Workflow | Trigger | Steps |
+| -------- | ------- | ----- |
+| `crowd-vibe.yml` | Push to `apps/crowd-vibe/**` | Lint → Type check → Build |
+| `admin.yml` | Push to `apps/admin/**` | Lint → Type check → Build |
+| `portfolio.yml` | Push to `apps/portfolio/**` | Lint → Build → E2E |
 
-## Development Guidelines
+## Packages
 
-### Adding a New App
+| Package | Purpose | Docs |
+| ------- | ------- | ---- |
+| [db](./packages/db/) | Prisma schema, client, migrations | [README](./packages/db/README.md) |
+| [ui](./packages/ui/) | Button, Card, Badge, Modal, Table, Stat, Avatar, Input, Select | [README](./packages/ui/README.md) |
+| [utils](./packages/utils/) | RBAC, Zod validation schemas, tenant query helpers | [README](./packages/utils/README.md) |
 
-1. Create a new directory in `apps/`
-2. Initialize with Next.js 15
-3. Add to workspace in root `package.json`
-4. Configure Turbo tasks in `turbo.json`
-5. Add dev/build scripts to root `package.json`
+---
 
-### Adding a New Package
-
-1. Create a new directory in `packages/`
-2. Add `package.json` with name matching directory
-3. Export modules via `index.ts`
-4. Import in apps using `@karsh/<package-name>`
-
-### Code Style
-
-- ESLint with TypeScript rules
-- Prettier for formatting
-- Strict TypeScript mode enabled
-
-## Contributing
-
-1. Create a feature branch from `main`
-2. Make your changes
-3. Run `npm run lint` and `npm run check-types`
-4. Submit a pull request
-
-## Credits
-
-Maintained by [@kasopeabolade](https://github.com/kasopeabolade)
-
-## License
-
-Private - All rights reserved.
+Maintained by [Kasope Abolade](https://github.com/kasopeabolade) · Karsh Core Solutions

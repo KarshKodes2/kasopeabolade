@@ -1,114 +1,147 @@
-# UI Component Library
+# packages/ui
 
-Shared React UI components for the monorepo applications.
-
-## Overview
-
-This package provides reusable UI components that maintain consistency across all apps in the monorepo.
-
-## Tech Stack
-
-- **Framework**: React 19
-- **Styling**: Tailwind CSS 4
-- **Language**: TypeScript 5
-- **Build**: TypeScript compiler
-
-## Installation
-
-This package is automatically available to all apps in the monorepo via npm workspaces.
+Shared React component library for the Karsh Core Solutions monorepo. All apps import from this package to maintain visual consistency.
 
 ## Usage
 
-### Import Components
-
 ```typescript
-import { Button, Input, Card } from '@karsh/ui';
-
-// Use in your components
-function MyComponent() {
-  return (
-    <Card>
-      <Input placeholder="Enter text" />
-      <Button>Submit</Button>
-    </Card>
-  );
-}
+import { Button, Card, Badge, Modal, Table, Stat, Avatar, Input, Select } from 'ui';
 ```
 
-## Available Components
+## Components
 
-### Planned Components
+### Button
 
-- **Button** - Primary, secondary, and outline variants
-- **Input** - Text input with validation states
-- **Card** - Container component with shadow and padding
-- **Modal** - Dialog component for overlays
-- **Form** - Form wrapper with validation
-- **Table** - Data table with sorting and pagination
+```typescript
+<Button variant="primary" onClick={fn}>Save</Button>
+<Button variant="secondary">Cancel</Button>
+<Button variant="ghost">Learn more</Button>
+<Button variant="danger" loading={isDeleting}>Delete</Button>
+```
+
+Variants: `primary` · `secondary` · `ghost` · `danger`. Supports `loading` boolean (shows spinner, disables interaction).
+
+### Card
+
+```typescript
+<Card>Standard card with border and surface background</Card>
+<Card variant="glass">Frosted glass effect for dark UIs</Card>
+```
+
+### Input
+
+```typescript
+<Input label="Email" type="email" error={errors.email?.message} />
+<Input label="Search" icon={<SearchIcon />} />
+```
+
+Supports `label`, `error`, and `icon` slot.
+
+### Select
+
+```typescript
+<Select label="Event type" options={EVENT_TYPES} value={val} onChange={setVal} />
+```
+
+### Badge
+
+```typescript
+<Badge status="confirmed">Confirmed</Badge>
+<Badge status="pending">Pending</Badge>
+<Badge status="cancelled">Cancelled</Badge>
+<Badge status="paid">Paid</Badge>
+```
+
+Status variants map to semantic colours: `pending` (amber) · `confirmed` (green) · `cancelled` (red) · `paid` (blue).
+
+### Modal
+
+```typescript
+<Modal open={isOpen} onClose={() => setOpen(false)} title="Delete project">
+  Are you sure?
+</Modal>
+```
+
+Renders via React portal. Closes on backdrop click and Escape key.
+
+### Table
+
+```typescript
+<Table
+  columns={[
+    { key: 'name', label: 'Name', sortable: true },
+    { key: 'status', label: 'Status' },
+  ]}
+  data={rows}
+  loading={isLoading}
+/>
+```
+
+Supports sortable column headers and loading skeleton state.
+
+### Stat
+
+```typescript
+<Stat label="Total bookings" value={142} trend="+12%" trendUp />
+<Stat label="Revenue" value="₦2.4M" />
+```
+
+Metric card with optional trend indicator.
+
+### Avatar
+
+```typescript
+<Avatar src={user.image} name={user.name} size="md" />
+```
+
+Shows image if `src` is provided; falls back to initials from `name`. Sizes: `sm` · `md` · `lg`.
+
+## Themes
+
+Per-app CSS custom property files in `themes/`. Import the relevant file in the app's root layout.
+
+| File | App | Brand colour |
+| ---- | --- | ------------ |
+| `themes/crowd-vibe.css` | `apps/crowd-vibe` | `#7C3AED` (purple) |
+| `themes/admin.css` | `apps/admin` | `#3B82F6` (blue) |
+| `themes/portfolio.css` | `apps/portfolio` | Existing dark theme |
+
+## Utilities
+
+```typescript
+import { cn } from 'ui/utils/cn';
+
+// Merges Tailwind classes, resolving conflicts correctly
+cn('px-4 py-2', isActive && 'bg-brand', className)
+```
+
+`cn` wraps `clsx` + `tailwind-merge`.
 
 ## Project Structure
 
 ```text
 packages/ui/
 ├── components/
-│   └── index.ts        # Component exports
-├── package.json
-└── tsconfig.json
+│   ├── Avatar.tsx
+│   ├── Badge.tsx
+│   ├── Button.tsx
+│   ├── Card.tsx
+│   ├── Input.tsx
+│   ├── Modal.tsx
+│   ├── Select.tsx
+│   ├── Stat.tsx
+│   ├── Table.tsx
+│   └── index.ts        # Barrel export
+├── themes/
+│   ├── crowd-vibe.css
+│   ├── admin.css
+│   └── portfolio.css
+├── utils/
+│   └── cn.ts           # clsx + tailwind-merge helper
+├── index.ts            # Top-level barrel export
+└── package.json
 ```
-
-## Creating New Components
-
-1. Create component file in `components/`
-2. Export from `components/index.ts`
-3. Build the package
-
-### Example Component
-
-```typescript
-// components/Button.tsx
-import { ButtonHTMLAttributes, ReactNode } from 'react';
-
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline';
-  children: ReactNode;
-}
-
-export function Button({
-  variant = 'primary',
-  children,
-  className,
-  ...props
-}: ButtonProps) {
-  const baseStyles = 'px-4 py-2 rounded-lg font-medium transition-colors';
-
-  const variantStyles = {
-    primary: 'bg-blue-600 text-white hover:bg-blue-700',
-    secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300',
-    outline: 'border-2 border-gray-300 hover:border-gray-400',
-  };
-
-  return (
-    <button
-      className={`${baseStyles} ${variantStyles[variant]} ${className}`}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-}
-```
-
-## Available Scripts
-
-| Script | Description |
-|--------|-------------|
-| `npm run build` | Build TypeScript to JavaScript |
-
-## Styling
-
-Components use Tailwind CSS classes. The Tailwind configuration is shared from `packages/config/tailwind/`.
 
 ## Related
 
-- [Root README](../../README.md)
-- [Tailwind Config](../config/tailwind/)
+- [Monorepo root](../../README.md)
