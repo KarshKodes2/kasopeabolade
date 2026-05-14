@@ -1,0 +1,15 @@
+/* Portfolio Design Tokens */
+:root {
+  --cv-bg: #0B0B0B;
+  --cv-surface: #111111;
+  --cv-elevated: #161616;
+  --cv-border: #222222;
+  --cv-brand: #2563EB;
+  --cv-brand-dark: #1D4ED8;
+  --cv-accent: #D4AF37;
+  --cv-glow: rgba(37, 99, 235, 0.4);
+  --cv-accent-glow: rgba(212, 175, 55, 0.35);
+  --cv-text: #FFFFFF;
+  --cv-text-muted: rgba(255, 255, 255, 0.5);
+  --cv-text-subtle: rgba(255, 255, 255, 0.25);
+}

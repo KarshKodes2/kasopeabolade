@@ -1,0 +1,14 @@
+/* Admin Design Tokens */
+:root {
+  --cv-bg: #09090B;
+  --cv-surface: #0F0F11;
+  --cv-elevated: #18181B;
+  --cv-border: #27272A;
+  --cv-brand: #2563EB;
+  --cv-brand-dark: #1D4ED8;
+  --cv-accent: #10B981;
+  --cv-glow: rgba(37, 99, 235, 0.3);
+  --cv-text: #FAFAFA;
+  --cv-text-muted: rgba(250, 250, 250, 0.5);
+  --cv-text-subtle: rgba(250, 250, 250, 0.25);
+}

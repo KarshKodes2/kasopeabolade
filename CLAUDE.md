@@ -1,6 +1,6 @@
 # Claude Code Configuration
 
-This is the Kasope Abolade monorepo - a full-stack Next.js monorepo with multiple apps and shared packages.
+This is the Kasope Abolade monorepo — a full-stack Next.js monorepo powering multiple products under Karsh Core Solutions.
 
 ## Project Overview
 
@@ -11,43 +11,78 @@ This is the Kasope Abolade monorepo - a full-stack Next.js monorepo with multipl
 | **Language** | TypeScript 5 (strict) |
 | **Styling** | Tailwind CSS 4 |
 | **Database** | PostgreSQL 15 + Prisma 6 |
-| **Auth** | NextAuth.js (GitHub OAuth) |
+| **Auth** | NextAuth.js v5 (GitHub OAuth + email magic link) |
 | **Build** | Turbo 2.5 + npm workspaces |
+| **Payments** | Paystack (₦) + Stripe (international) |
+| **Media** | Cloudinary |
+| **Email** | Resend |
 
 ## Apps
 
-| App | Path | Purpose |
-|-----|------|---------|
-| admin | `apps/admin/` | Internal dashboard |
-| portfolio | `apps/portfolio/` | Public portfolio |
-| dj-karsh | `apps/dj-karsh/` | DJ booking platform |
-| karsh-core | `apps/karsh-core/` | Corporate site |
+| App | Path | Port | Purpose |
+| --- | ---- | ---- | ------- |
+| admin | `apps/admin/` | 3001 | Super-admin dashboard — manages ALL apps (CrowdVibe, Portfolio, Karsh Core) |
+| portfolio | `apps/portfolio/` | 3002 | Kasope's public developer portfolio |
+| crowd-vibe | `apps/crowd-vibe/` | 3003 | CrowdVibe multi-tenant SaaS — entertainment booking platform |
+| karsh-core | `apps/karsh-core/` | 3004 | Karsh Core Solutions corporate site + lead capture |
 
 ## Packages
 
 | Package | Path | Purpose |
 |---------|------|---------|
-| db | `packages/db/` | Prisma schema + client |
-| ui | `packages/ui/` | Shared UI components |
-| utils | `packages/utils/` | Shared utilities (RBAC) |
+| db | `packages/db/` | Prisma 6 schema + client (multi-tenant SaaS schema) |
+| ui | `packages/ui/` | Shared UI components (Button, Card, Badge, Modal, Table, Stat, Avatar) |
+| utils | `packages/utils/` | RBAC helpers, Zod validation schemas, tenant query helpers |
+
+## CrowdVibe Architecture
+
+CrowdVibe is a multi-tenant SaaS where entertainers (DJs, MCs, event hosts) subscribe to get a branded public booking site.
+
+```text
+apps/crowd-vibe/app/
+├── (platform)/             — SaaS marketing site (crowdvibe.io)
+├── (auth)/                 — Sign in / sign up
+├── (dashboard)/            — Protected tenant dashboard
+│   ├── bookings/
+│   ├── media/
+│   ├── settings/
+│   └── billing/
+├── site/[slug]/            — Public per-tenant sites
+│   ├── book/               — 5-step booking wizard
+│   ├── gallery/
+│   └── press/              — Digital EPK
+└── api/
+    ├── bookings/
+    ├── media/
+    ├── availability/
+    ├── payments/paystack/
+    ├── payments/stripe/
+    ├── tenants/
+    └── webhooks/stripe/
+middleware.ts               — Rewrites custom domains + subdomains → /site/[slug]/...
+```
+
+**Multi-tenant domain routing:** Visitors to `djrandyuniverse.com` are transparently served the tenant's site via Next.js edge middleware — the URL never changes. Subdomains like `dj-randy.crowdvibe.io` work the same way.
 
 ## Quick Commands
 
 ```bash
 # Development
-npm run dev              # Start all apps
-npm run dev:admin        # Start admin only
-npm run dev:portfolio    # Start portfolio only
+npm run dev                 # Start all apps
+npm run dev:admin           # Start admin only (port 3001)
+npm run dev:portfolio       # Start portfolio only (port 3002)
+npm run dev:crowd-vibe      # Start CrowdVibe only (port 3003)
+npm run dev:karsh-core      # Start Karsh Core only (port 3004)
 
 # Database
-npm run start:db         # Start PostgreSQL
-npm run db:sync          # Run migrations
-npm run db:studio        # Open Prisma Studio
+npm run start:db            # Start PostgreSQL
+npm run db:sync             # Run Prisma migrations
+npm run db:studio           # Open Prisma Studio
 
 # Build & Test
-npm run build            # Build all
-npm run lint             # Lint all
-npm run e2e              # E2E tests
+npm run build               # Build all
+npm run lint                # Lint all
+npm run e2e                 # E2E tests
 ```
 
 ## Claude Agents
@@ -82,18 +117,37 @@ Available slash commands (see `.claude/` for details):
 2. **No Cross-App Imports**: Apps cannot import from other apps
 3. **Database Access**: All DB operations go through `packages/db`
 4. **Shared Components**: Use `packages/ui` for reusable UI
-5. **Utilities**: Use `packages/utils` for shared logic
+5. **Utilities**: Use `packages/utils` for shared logic (RBAC, validation, tenant helpers)
+6. **Prisma**: Always use workspace-pinned v6 (`npm run --workspace=db generate`), never `npx prisma` which fetches latest
 
 ## Environment Variables
 
-Required in `.env`:
+Each app has its own `.env.local`. Shared DB url goes in `packages/db/.env`.
 
 ```env
+# packages/db/.env
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/karsh
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=your-secret
-GITHUB_ID=your-github-id
-GITHUB_SECRET=your-github-secret
+
+# apps/crowd-vibe/.env.local
+NEXTAUTH_URL=http://localhost:3003
+NEXTAUTH_SECRET=
+GITHUB_ID=
+GITHUB_SECRET=
+PAYSTACK_SECRET_KEY=
+PAYSTACK_PUBLIC_KEY=
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+RESEND_API_KEY=
+NEXT_PUBLIC_APP_URL=https://crowdvibe.io
+
+# apps/admin/.env.local
+NEXTAUTH_URL=http://localhost:3001
+NEXTAUTH_SECRET=
+DATABASE_URL=  (same as db package)
 ```
 
 ## File Locations
@@ -109,7 +163,19 @@ GITHUB_SECRET=your-github-secret
 ```
 {scope}: ({type}:) {description}
 
-Example: admin: (feat:) add user management
+Example: crowd-vibe: (feat:) add booking wizard
+Example: admin: (feat:) add tenant management
+Example: db: (chore:) add saas-schema migration
 ```
 
 See `.claude/COMMIT_STANDARDS.md` for details.
+
+## Deployment
+
+| App | Platform | Notes |
+| --- | -------- | ----- |
+| crowd-vibe | Vercel | Required for Edge middleware custom domain routing |
+| portfolio | Vercel | Free tier |
+| karsh-core | Vercel | Free tier |
+| admin | Railway | Internal tool, cheaper on Railway |
+| PostgreSQL | Neon or Railway | Neon integrates natively with Vercel |

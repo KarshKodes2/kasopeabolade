@@ -1,0 +1,91 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+/* ─── CrowdVibe Design Tokens ─────────────────────────────────────────────── */
+:root {
+  --cv-bg: #0B0B0B;
+  --cv-surface: #111111;
+  --cv-elevated: #1A1A1A;
+  --cv-border: #2a2a2a;
+  --cv-brand: #7C3AED;
+  --cv-brand-dark: #5B21B6;
+  --cv-accent: #F59E0B;
+  --cv-glow: rgba(124, 58, 237, 0.4);
+  --cv-accent-glow: rgba(245, 158, 11, 0.35);
+}
+
+/* ─── Base ────────────────────────────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background-color: var(--cv-bg);
+  color: #ffffff;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Sora', system-ui, sans-serif;
+}
+
+/* ─── Utility Classes ─────────────────────────────────────────────────────── */
+.glass {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glow-brand {
+  box-shadow: 0 0 30px var(--cv-glow);
+}
+
+.glow-accent {
+  box-shadow: 0 0 30px var(--cv-accent-glow);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, var(--cv-brand), var(--cv-accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-white {
+  background: linear-gradient(135deg, #ffffff 0%, rgba(255,255,255,0.6) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Scrollbar ───────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--cv-surface); }
+::-webkit-scrollbar-thumb { background: var(--cv-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--cv-brand); }
+
+/* ─── Animations ──────────────────────────────────────────────────────────── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px var(--cv-glow); }
+  50%       { box-shadow: 0 0 45px var(--cv-glow); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-10px); }
+}
+
+.animate-fade-in-up { animation: fadeInUp 0.6s ease forwards; }
+.animate-pulse-glow { animation: pulse-glow 2.5s ease-in-out infinite; }
+.animate-float      { animation: float 4s ease-in-out infinite; }

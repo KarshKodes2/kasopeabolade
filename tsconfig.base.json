@@ -16,6 +16,6 @@
       "@/*": ["./packages/*"]
     }
   },
-  "exclude": ["node_modules"],
-  "include": ["apps", "packages"]
+  "exclude": ["node_modules", "apps"],
+  "include": ["packages"]
 }

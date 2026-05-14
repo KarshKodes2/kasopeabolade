@@ -127,10 +127,10 @@ GITHUB_SECRET="your_github_secret"
 
 | App | Description | Documentation |
 |-----|-------------|---------------|
-| **admin** | Internal dashboard for managing projects, bookings, and users | [README](./apps/admin/README.md) |
+| **admin** | Internal dashboard for managing projects, bookings (DJ and Tech consults), and users (multi-tenancy) | [README](./apps/admin/README.md) |
 | **portfolio** | Public-facing portfolio showcasing projects and blog | [README](./apps/portfolio/README.md) |
-| **dj-karsh** | DJ Karsh entertainment booking and portfolio platform | [README](./apps/dj-karsh/README.md) |
-| **karsh-core** | Karsh Core Solutions corporate website | [README](./apps/karsh-core/README.md) |
+| **dj-karsh** | DJ Karsh entertainment booking and portfolio platform (content-creation, mixtapes and personal promotions) | [README](./apps/dj-karsh/README.md) |
+| **karsh-core** | Karsh Core Solutions corporate website (tech-consulting and solutions) | [README](./apps/karsh-core/README.md) |
 
 ## Packages
 

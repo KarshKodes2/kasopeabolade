@@ -1,0 +1,15 @@
+/* CrowdVibe Design Tokens */
+:root {
+  --cv-bg: #0B0B0B;
+  --cv-surface: #111111;
+  --cv-elevated: #1A1A1A;
+  --cv-border: #2a2a2a;
+  --cv-brand: #7C3AED;
+  --cv-brand-dark: #5B21B6;
+  --cv-accent: #F59E0B;
+  --cv-glow: rgba(124, 58, 237, 0.4);
+  --cv-accent-glow: rgba(245, 158, 11, 0.35);
+  --cv-text: #FFFFFF;
+  --cv-text-muted: rgba(255, 255, 255, 0.5);
+  --cv-text-subtle: rgba(255, 255, 255, 0.25);
+}

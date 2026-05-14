@@ -1,6 +1,20 @@
 {
+  "name": "ui",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./index.ts",
+  "types": "./index.ts",
   "scripts": {
-    "install": "echo '✅ UI library installed. Ready for reuse across apps.'",
-    "build": "tsc --build"
+    "build": "tsc --build",
+    "install": "echo '✅ UI library ready.'"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5"
   }
 }

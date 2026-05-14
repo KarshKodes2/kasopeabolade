@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "seed": "tsx packages/db/testData.ts",
-    "install": "echo '✅ Karsh Core site: Setup ready. Use markdown or CMS integration if needed.'"
+    "install": "echo '✅ Karsh Core site: Setup ready. Use markdown or CMS integration if needed.'",
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "next": "15.3.5",
