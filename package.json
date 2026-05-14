@@ -29,9 +29,8 @@
     "db:studio": "npm run studio --workspace=db",
     "db:reset": "npm run reset --workspace=db",
     "start:db": "scripts/db-start.sh",
-    "reset:db": "prisma migrate reset --schema packages/db/schema.prisma --force && tsx packages/db/seed.ts",
-    "populate-test": "tsx packages/db/testData.ts",
-    "seed": "npm run start:db && turbo run seed --filter=db",
+    "reset:db": "npm run --workspace=db reset",
+    "seed": "npm run --workspace=db seed",
     "e2e": "npm run start:db && npm run build:portfolio && npx playwright test",
     "generate": "turbo run generate --filter=db"
   },

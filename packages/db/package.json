@@ -9,8 +9,8 @@
     "build": "echo 'No build step for db'",
     "generate": "prisma generate",
     "postinstall": "npm run generate",
-    "sync": "npm run migrate && npm run generate",
-    "migrate": "prisma migrate deploy --schema=schema.prisma",
+    "sync": "prisma migrate dev --schema=schema.prisma && npm run generate",
+    "deploy": "prisma migrate deploy --schema=schema.prisma && npm run generate",
     "studio": "prisma studio"
   },
   "dependencies": {
