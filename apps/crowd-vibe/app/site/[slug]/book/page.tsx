@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
-import { prisma } from '../../../../lib/prisma';
-import { BookingWizard } from '../../../../components/booking/BookingWizard';
+import { prisma } from '@/shared/lib/prisma';
+import { BookingWizard } from '@/features/bookings';
 import type { Metadata } from 'next';
 
 interface Props {

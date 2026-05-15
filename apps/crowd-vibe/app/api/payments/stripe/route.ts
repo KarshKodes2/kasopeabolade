@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '../../../../lib/prisma';
-import { createPaymentIntent, stripe } from '../../../../lib/stripe';
+import { prisma } from '@/shared/lib/prisma';
+import { createPaymentIntent, stripe } from '@/shared/lib/stripe';
 
 export async function POST(req: NextRequest) {
   const { bookingId } = (await req.json()) as { bookingId: string };

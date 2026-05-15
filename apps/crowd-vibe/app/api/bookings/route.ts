@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '../../../lib/prisma';
-import { sendBookingConfirmation } from '../../../lib/resend';
+import { prisma } from '@/shared/lib/prisma';
+import { sendBookingConfirmation } from '@/shared/lib/resend';
 import { format } from 'date-fns';
 
 export async function GET(req: NextRequest) {

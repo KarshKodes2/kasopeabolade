@@ -103,6 +103,11 @@ model Tenant {
   soundcloudUrl String?
   spotifyUrl    String?
 
+  // Google Calendar integration
+  googleAccessToken  String?  @db.Text
+  googleRefreshToken String?  @db.Text
+  googleCalendarId   String?
+
   users         User[]
   bookings      Booking[]
   mediaAssets   MediaAsset[]
@@ -189,9 +194,11 @@ model Booking {
   status          BookingStatus @default(PENDING)
   stripePaymentId String?
   paystackRef     String?
-  adminNotes      String?       @db.Text
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  adminNotes            String?       @db.Text
+  googleCalendarEventId String?
+  invoiceUrl            String?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
 }
 
 // ─── Media Assets ─────────────────────────────────────────────────────────────

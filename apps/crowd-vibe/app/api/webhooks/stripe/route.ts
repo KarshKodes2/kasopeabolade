@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { stripe } from '../../../../lib/stripe';
-import { prisma } from '../../../../lib/prisma';
+import { stripe } from '@/shared/lib/stripe';
+import { prisma } from '@/shared/lib/prisma';
 import type Stripe from 'stripe';
 
 export async function POST(req: NextRequest) {

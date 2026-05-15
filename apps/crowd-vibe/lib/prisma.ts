@@ -1,1 +1,1 @@
-export { prisma } from 'db';
+export { prisma } from '@/shared/lib/prisma';

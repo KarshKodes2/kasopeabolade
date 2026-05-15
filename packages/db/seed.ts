@@ -5,6 +5,26 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Seeding database...');
 
+  // ── Tenant: DJ Karsh (platform owner / super-admin's CrowdVibe brand) ───────
+  const djKarshTenant = await prisma.tenant.upsert({
+    where: { slug: 'dj-karsh' },
+    update: {},
+    create: {
+      name: 'DJ Karsh',
+      slug: 'dj-karsh',
+      plan: 'ENTERPRISE',
+      status: 'ACTIVE',
+      bio: 'DJ Karsh — founder of CrowdVibe and Karsh Core Solutions. Afrobeats & Amapiano specialist based in Lagos.',
+      location: 'Lagos, Nigeria',
+      brandColor: '#7C3AED',
+      accentColor: '#F59E0B',
+      instagramUrl: 'djkarsh',
+      tiktokUrl: 'djkarsh',
+      youtubeUrl: 'UCdjkarsh',
+    },
+  });
+  console.log(`✅ Tenant: ${djKarshTenant.name} (/${djKarshTenant.slug})`);
+
   // ── Tenant: DJ Randy Universe ───────────────────────────────────────────────
   const tenant = await prisma.tenant.upsert({
     where: { slug: 'dj-randy' },
@@ -100,10 +120,11 @@ async function main() {
       clientPhone: '+234 801 234 5678',
       eventType: 'WEDDING',
       eventDate: new Date('2025-09-20'),
+      startTime: '19:00',
       venue: 'Eko Hotel & Suites',
       venueAddress: 'Plot 1415 Adetokunbo Ademola St, Victoria Island, Lagos',
       guestCount: 350,
-      services: ['DJ_SET', 'MC_HOST', 'SOUND_SYSTEM'],
+      services: ['DJ', 'MC_HOST', 'SOUND_SYSTEM'],
       basePrice: 450000,
       totalPrice: 450000,
       depositAmount: 150000,
@@ -113,18 +134,18 @@ async function main() {
   });
   console.log(`✅ Booking: ${booking.clientName} — ${booking.eventType}`);
 
-  // ── Super admin user ────────────────────────────────────────────────────────
-  // Update this email to YOUR GitHub account email so the admin dashboard works
+  // ── Super admin user (also DJ Karsh tenant on CrowdVibe) ────────────────────
   const superAdmin = await prisma.user.upsert({
     where: { email: 'aboladekasope@gmail.com' },
-    update: { role: 'SUPER_ADMIN' },
+    update: { role: 'SUPER_ADMIN', tenantId: djKarshTenant.id },
     create: {
       name: 'Kasope Abolade',
       email: 'aboladekasope@gmail.com',
       role: 'SUPER_ADMIN',
+      tenantId: djKarshTenant.id,
     },
   });
-  console.log(`✅ Super admin: ${superAdmin.email}`);
+  console.log(`✅ Super admin: ${superAdmin.email} → tenant: ${djKarshTenant.slug}`);
 
   // ── Karsh Core lead ─────────────────────────────────────────────────────────
   await prisma.lead.upsert({
@@ -152,14 +173,15 @@ async function main() {
       slug: 'crowdvibe',
       description: 'Multi-tenant SaaS platform for entertainers. Custom booking sites, payment processing, and media hub — all under their own domain.',
       tags: ['Next.js', 'SaaS', 'Multi-tenant', 'Prisma', 'Paystack', 'Stripe'],
-      liveUrl: 'https://crowdvibe.io',
       published: true,
+      featured: true,
     },
   });
   console.log('✅ Project: CrowdVibe portfolio entry');
 
   console.log('\n🎉 Seed complete.\n');
-  console.log('   CrowdVibe tenant site → http://localhost:3003/site/dj-randy');
+  console.log('   DJ Karsh site         → http://localhost:3003/site/dj-karsh');
+  console.log('   DJ Randy site         → http://localhost:3003/site/dj-randy');
   console.log('   Tenant dashboard      → http://localhost:3003/dashboard');
   console.log('   Admin dashboard       → http://localhost:3001/dashboard');
 }

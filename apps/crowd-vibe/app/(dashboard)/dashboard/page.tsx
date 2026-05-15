@@ -1,5 +1,5 @@
-import { auth } from '../../lib/auth';
-import { prisma } from '../../lib/prisma';
+import { auth } from '@/shared/lib/auth';
+import { prisma } from '@/shared/lib/prisma';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 
@@ -14,7 +14,7 @@ export default async function DashboardPage() {
         <h1 className="mb-4 text-2xl font-bold text-white">Welcome to CrowdVibe!</h1>
         <p className="mb-6 text-white/50">Let's set up your entertainer profile to get started.</p>
         <Link
-          href="/dashboard/settings"
+          href="/settings"
           className="rounded-xl px-6 py-3 font-medium text-white"
           style={{ background: 'var(--cv-brand)' }}
         >
@@ -55,7 +55,7 @@ export default async function DashboardPage() {
           </p>
         </div>
         <Link
-          href="/dashboard/bookings"
+          href="/bookings"
           className="rounded-xl px-4 py-2 text-sm font-medium text-white"
           style={{ background: 'var(--cv-brand)' }}
         >
@@ -86,7 +86,7 @@ export default async function DashboardPage() {
       <div className="rounded-xl border" style={{ background: 'var(--cv-surface)', borderColor: 'var(--cv-border)' }}>
         <div className="flex items-center justify-between border-b px-5 py-4" style={{ borderColor: 'var(--cv-border)' }}>
           <h2 className="text-sm font-semibold text-white">Recent Bookings</h2>
-          <Link href="/dashboard/bookings" className="text-xs text-white/40 hover:text-white">View all →</Link>
+          <Link href="/bookings" className="text-xs text-white/40 hover:text-white">View all →</Link>
         </div>
         {recentBookings.length === 0 ? (
           <div className="px-5 py-10 text-center text-sm text-white/30">

@@ -1,4 +1,4 @@
-import { auth } from '../../../../lib/auth';
+import { auth } from '@/shared/lib/auth';
 import { prisma } from 'db';
 import Stripe from 'stripe';
 import { redirect } from 'next/navigation';

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '../../../../lib/prisma';
-import { initiatePayment, verifyPayment } from '../../../../lib/paystack';
+import { prisma } from '@/shared/lib/prisma';
+import { initiatePayment, verifyPayment } from '@/shared/lib/paystack';
 import { nanoid } from 'nanoid';
 
 export async function POST(req: NextRequest) {

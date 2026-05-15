@@ -1,4 +1,4 @@
-import { auth } from '../../../lib/auth';
+import { auth } from '@/shared/lib/auth';
 import { prisma } from 'db';
 import { MediaType } from '@prisma/client';
 import { v2 as cloudinary, UploadApiResponse, UploadApiErrorResponse } from 'cloudinary';

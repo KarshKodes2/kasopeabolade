@@ -1,14 +1,9 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { prisma } from '../../../lib/prisma';
-import { SiteNav } from '../../../components/layout/SiteNav';
-import { SiteFooter } from '../../../components/layout/SiteFooter';
-import { HeroSection } from '../../../components/site/HeroSection';
-import { ServicesSection } from '../../../components/site/ServicesSection';
-import { FeaturedMixes } from '../../../components/site/FeaturedMixes';
-import { GallerySection } from '../../../components/site/GallerySection';
-import { BookingCTASection } from '../../../components/site/BookingCTASection';
-import { SocialLinksSection } from '../../../components/site/SocialLinksSection';
+import { prisma } from '@/shared/lib/prisma';
+import { SiteNav } from '@/shared/components/layout/SiteNav';
+import { SiteFooter } from '@/shared/components/layout/SiteFooter';
+import { HeroSection, ServicesSection, FeaturedMixes, GallerySection, BookingCTASection, SocialLinksSection } from '@/features/tenants';
 
 interface Props {
   params: Promise<{ slug: string }>;

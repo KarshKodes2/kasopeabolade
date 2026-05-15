@@ -1,4 +1,4 @@
-import { auth } from '../../../../lib/auth';
+import { auth } from '@/shared/lib/auth';
 import { prisma } from 'db';
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {

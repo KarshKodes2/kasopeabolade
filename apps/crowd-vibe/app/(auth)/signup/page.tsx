@@ -1,4 +1,4 @@
-import { signIn } from '../../../lib/auth';
+import { signIn } from '@/shared/lib/auth';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = { title: 'Create your account — CrowdVibe' };
