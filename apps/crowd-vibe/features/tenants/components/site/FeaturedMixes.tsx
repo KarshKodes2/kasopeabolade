@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 import type { MediaAsset } from '@prisma/client';
 
 const WavesurferPlayer = dynamic(
-  () => import('../media/WavesurferPlayer').then((m) => m.WavesurferPlayer),
+  () => import('@/features/media/components/WavesurferPlayer').then((m) => m.WavesurferPlayer),
   { ssr: false, loading: () => <div className="h-16 animate-pulse rounded-xl bg-white/5" /> },
 );
 

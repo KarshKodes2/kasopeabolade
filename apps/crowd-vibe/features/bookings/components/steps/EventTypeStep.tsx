@@ -27,8 +27,8 @@ export function EventTypeStep({ value, onChange, onNext }: Props) {
         {EVENT_TYPES.map((et) => (
           <button
             key={et.value}
-            onClick={() => onChange(et.value)}
-            className="flex flex-col items-center rounded-xl border p-4 text-center transition-all hover:border-[var(--cv-brand)]"
+            onClick={() => { onChange(et.value); onNext(); }}
+            className="flex flex-col items-center rounded-xl border p-4 text-center transition-all hover:border-[var(--cv-brand)] active:scale-95"
             style={{
               background: value === et.value ? 'rgba(124,58,237,0.15)' : 'var(--cv-elevated)',
               borderColor: value === et.value ? 'var(--cv-brand)' : 'var(--cv-border)',
@@ -40,14 +40,7 @@ export function EventTypeStep({ value, onChange, onNext }: Props) {
         ))}
       </div>
 
-      <button
-        onClick={onNext}
-        disabled={!value}
-        className="mt-6 w-full rounded-xl py-3 text-sm font-semibold text-white disabled:opacity-30 transition-all hover:opacity-90"
-        style={{ background: 'var(--cv-brand)' }}
-      >
-        Continue →
-      </button>
+      <p className="mt-4 text-center text-xs text-white/25">Tap an event type to continue</p>
     </div>
   );
 }

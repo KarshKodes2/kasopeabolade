@@ -12,7 +12,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <div className="flex min-h-screen" style={{ background: 'var(--cv-bg)' }}>
       <DashboardSidebar userName={session.user?.name ?? session.user?.email} />
-      <main className="flex-1 overflow-auto p-6 md:p-8">{children}</main>
+      <main className="flex-1 overflow-auto p-6 pt-20 md:p-8 md:pt-8">{children}</main>
     </div>
   );
 }
