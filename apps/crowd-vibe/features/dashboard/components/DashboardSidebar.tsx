@@ -7,7 +7,9 @@ import { useState } from 'react';
 const NAV = [
   { href: '/dashboard', label: 'Overview', icon: '📊' },
   { href: '/bookings', label: 'Bookings', icon: '📅' },
+  { href: '/events', label: 'Events', icon: '🎪' },
   { href: '/media', label: 'Media', icon: '🎵' },
+  { href: '/analytics', label: 'Analytics', icon: '📈' },
   { href: '/settings', label: 'Settings', icon: '⚙️' },
   { href: '/billing', label: 'Billing', icon: '💳' },
 ];

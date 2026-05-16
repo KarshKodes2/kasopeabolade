@@ -4,6 +4,7 @@ export { FeaturedMixes } from './components/site/FeaturedMixes';
 export { GallerySection } from './components/site/GallerySection';
 export { BookingCTASection } from './components/site/BookingCTASection';
 export { SocialLinksSection } from './components/site/SocialLinksSection';
+export { NewsletterSection } from './components/site/NewsletterSection';
 export { TenantSettingsForm } from './components/TenantSettingsForm';
 export { useTenantSettings } from './hooks/useTenantSettings';
 export type { Tenant, TenantSettings, TenantPlan, TenantStatus } from './types';

@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { prisma } from '@/shared/lib/prisma';
 import { SiteNav } from '@/shared/components/layout/SiteNav';
 import { SiteFooter } from '@/shared/components/layout/SiteFooter';
-import { HeroSection, ServicesSection, FeaturedMixes, GallerySection, BookingCTASection, SocialLinksSection } from '@/features/tenants';
+import { HeroSection, ServicesSection, FeaturedMixes, GallerySection, BookingCTASection, SocialLinksSection, NewsletterSection } from '@/features/tenants';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -60,6 +60,8 @@ export default async function TenantSitePage({ params }: Props) {
       )}
 
       <BookingCTASection name={tenant.name} slug={tenant.slug} />
+
+      <NewsletterSection slug={tenant.slug} artistName={tenant.name} />
 
       <SocialLinksSection socials={socials} />
 

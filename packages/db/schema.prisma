@@ -108,10 +108,12 @@ model Tenant {
   googleRefreshToken String?  @db.Text
   googleCalendarId   String?
 
-  users         User[]
-  bookings      Booking[]
-  mediaAssets   MediaAsset[]
-  subscriptions Subscription[]
+  users                 User[]
+  bookings              Booking[]
+  mediaAssets           MediaAsset[]
+  subscriptions         Subscription[]
+  events                Event[]
+  newsletterSubscribers NewsletterSubscriber[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -251,6 +253,40 @@ model Lead {
   source      String?
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
+}
+
+// ─── Events (DJ's upcoming gigs — fans view/RSVP) ────────────────────────────
+
+model Event {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  title       String
+  description String?  @db.Text
+  venue       String
+  city        String?
+  eventDate   DateTime
+  startTime   String
+  endTime     String?
+  ticketUrl   String?
+  imageUrl    String?
+  published   Boolean  @default(false)
+  featured    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ─── Newsletter Subscribers ────────────────────────────────────────────────────
+
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  tenantId  String?
+  tenant    Tenant?  @relation(fields: [tenantId], references: [id])
+  email     String
+  name      String?
+  createdAt DateTime @default(now())
+
+  @@unique([email, tenantId])
 }
 
 // ─── SaaS Subscriptions ───────────────────────────────────────────────────────
