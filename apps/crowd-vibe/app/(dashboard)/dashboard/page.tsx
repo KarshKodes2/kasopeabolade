@@ -94,7 +94,7 @@ export default async function DashboardPage() {
             <Link href={`/site/${tenant?.slug}/book`} className="underline hover:text-white">Share your booking page</Link>
           </div>
         ) : (
-          <div className="divide-y" style={{ borderColor: 'var(--cv-border)' }}>
+          <div className="divide-y divide-white/5">
             {recentBookings.map((b) => (
               <div key={b.id} className="flex items-center justify-between px-5 py-3">
                 <div>
