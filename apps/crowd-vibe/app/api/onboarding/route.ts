@@ -7,9 +7,12 @@ export async function POST(req: NextRequest) {
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await req.json();
-  const { name, slug, bio, location, brandColor, accentColor } = body;
+  const { name, slug, bio, location, brandColor, accentColor, siteType, redirectUrl } = body;
 
   if (!name || !slug) return NextResponse.json({ error: 'Name and slug required' }, { status: 400 });
+  if (siteType === 'REDIRECT' && !redirectUrl) {
+    return NextResponse.json({ error: 'Redirect URL required for REDIRECT site type.' }, { status: 400 });
+  }
 
   const slugified = slug.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
 
@@ -24,6 +27,8 @@ export async function POST(req: NextRequest) {
       location,
       brandColor: brandColor ?? '#7C3AED',
       accentColor: accentColor ?? '#F59E0B',
+      siteType: siteType ?? 'PERSONAL',
+      redirectUrl: siteType === 'REDIRECT' ? redirectUrl : null,
       plan: 'FREE',
     },
   });

@@ -31,7 +31,7 @@ export function ContactStep({ value, onChange, onNext, onBack }: Props) {
               value={value[field] ?? ''}
               onChange={(e) => onChange({ [field]: e.target.value })}
               placeholder={placeholders[field]}
-              className="w-full rounded-lg border px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--cv-brand)]"
+              className="w-full rounded-lg border px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-(--cv-brand)"
               style={{ background: 'var(--cv-elevated)', borderColor: 'var(--cv-border)' }}
             />
           </div>

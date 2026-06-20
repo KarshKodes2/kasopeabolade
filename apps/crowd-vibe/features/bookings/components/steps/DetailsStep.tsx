@@ -36,7 +36,7 @@ export function DetailsStep({ value, onChange, onNext, onBack }: Props) {
           value={value.venue ?? ''}
           onChange={(e) => onChange({ venue: e.target.value })}
           placeholder="e.g. Eko Hotel & Suites"
-          className="w-full rounded-lg border px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--cv-brand)]"
+          className="w-full rounded-lg border px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-(--cv-brand)"
           style={{ background: 'var(--cv-elevated)', borderColor: 'var(--cv-border)' }}
         />
       </div>
@@ -47,7 +47,7 @@ export function DetailsStep({ value, onChange, onNext, onBack }: Props) {
           value={value.venueAddress ?? ''}
           onChange={(e) => onChange({ venueAddress: e.target.value })}
           placeholder="Full address"
-          className="w-full rounded-lg border px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--cv-brand)]"
+          className="w-full rounded-lg border px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-(--cv-brand)"
           style={{ background: 'var(--cv-elevated)', borderColor: 'var(--cv-border)' }}
         />
       </div>
@@ -59,7 +59,7 @@ export function DetailsStep({ value, onChange, onNext, onBack }: Props) {
           value={value.guestCount ?? ''}
           onChange={(e) => onChange({ guestCount: e.target.value })}
           placeholder="e.g. 200"
-          className="w-full rounded-lg border px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--cv-brand)]"
+          className="w-full rounded-lg border px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-(--cv-brand)"
           style={{ background: 'var(--cv-elevated)', borderColor: 'var(--cv-border)' }}
         />
       </div>
@@ -95,7 +95,7 @@ export function DetailsStep({ value, onChange, onNext, onBack }: Props) {
           onChange={(e) => onChange({ specialRequests: e.target.value })}
           rows={3}
           placeholder="Specific songs, themes, setup requirements..."
-          className="w-full resize-none rounded-lg border px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--cv-brand)]"
+          className="w-full resize-none rounded-lg border px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-(--cv-brand)"
           style={{ background: 'var(--cv-elevated)', borderColor: 'var(--cv-border)' }}
         />
       </div>

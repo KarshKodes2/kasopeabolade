@@ -28,7 +28,7 @@ export function EventTypeStep({ value, onChange, onNext }: Props) {
           <button
             key={et.value}
             onClick={() => { onChange(et.value); onNext(); }}
-            className="flex flex-col items-center rounded-xl border p-4 text-center transition-all hover:border-[var(--cv-brand)] active:scale-95"
+            className="flex flex-col items-center rounded-xl border p-4 text-center transition-all hover:border-(--cv-brand) active:scale-95"
             style={{
               background: value === et.value ? 'rgba(124,58,237,0.15)' : 'var(--cv-elevated)',
               borderColor: value === et.value ? 'var(--cv-brand)' : 'var(--cv-border)',

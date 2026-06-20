@@ -1,9 +1,10 @@
-import { notFound } from 'next/navigation';
-import Link from 'next/link';
+import { notFound, redirect } from 'next/navigation';
 import { prisma } from '@/shared/lib/prisma';
 import { SiteNav } from '@/shared/components/layout/SiteNav';
 import { SiteFooter } from '@/shared/components/layout/SiteFooter';
 import { HeroSection, ServicesSection, FeaturedMixes, GallerySection, BookingCTASection, SocialLinksSection, NewsletterSection } from '@/features/tenants';
+import { PortfolioSite } from '@/features/tenants/components/site/portfolio/PortfolioSite';
+import { CorporateSite } from '@/features/tenants/components/site/corporate/CorporateSite';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -12,8 +13,26 @@ interface Props {
 export default async function TenantSitePage({ params }: Props) {
   const { slug } = await params;
 
-  const [tenant, featuredMixes, galleryAssets] = await Promise.all([
-    prisma.tenant.findUnique({ where: { slug } }),
+  const tenant = await prisma.tenant.findUnique({ where: { slug } });
+  if (!tenant) notFound();
+
+  // Handle REDIRECT site type
+  if (tenant.siteType === 'REDIRECT' && tenant.redirectUrl) {
+    redirect(tenant.redirectUrl);
+  }
+
+  // PORTFOLIO template
+  if (tenant.siteType === 'PORTFOLIO') {
+    return <PortfolioSite tenant={tenant} />;
+  }
+
+  // CORPORATE template
+  if (tenant.siteType === 'CORPORATE') {
+    return <CorporateSite tenant={tenant} />;
+  }
+
+  // PERSONAL template (default — existing DJ/entertainer template)
+  const [featuredMixes, galleryAssets] = await Promise.all([
     prisma.mediaAsset.findMany({
       where: { tenantId: undefined, tenant: { slug }, type: { in: ['MIX', 'PODCAST', 'LIVE_SET'] }, featured: true },
       orderBy: { publishedAt: 'desc' },
@@ -25,8 +44,6 @@ export default async function TenantSitePage({ params }: Props) {
       take: 6,
     }),
   ]);
-
-  if (!tenant) notFound();
 
   const socials = {
     instagram: tenant.instagramUrl,

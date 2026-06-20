@@ -3,7 +3,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-const STEPS = ['Your Identity', 'Brand Colors', 'Your Story', 'Launch'];
+type SiteType = 'PERSONAL' | 'PORTFOLIO' | 'CORPORATE' | 'REDIRECT';
+
+const STEPS = ['Your Identity', 'Site Type', 'Brand Colors', 'Your Story', 'Launch'];
 
 interface FormData {
   name: string;
@@ -12,6 +14,8 @@ interface FormData {
   location: string;
   brandColor: string;
   accentColor: string;
+  siteType: SiteType;
+  redirectUrl: string;
 }
 
 function slugify(s: string) {
@@ -24,16 +28,16 @@ function IdentityStep({ value, onChange }: { value: Partial<FormData>; onChange:
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-2xl font-black text-white">What's your artist name?</h2>
-        <p className="mt-1 text-sm text-white/40">This appears on your public booking site.</p>
+        <h2 className="text-2xl font-black text-white">What's your name?</h2>
+        <p className="mt-1 text-sm text-white/40">This appears on your public site and in search.</p>
       </div>
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-white/70">Artist / Stage name *</label>
+        <label className="mb-1.5 block text-sm font-medium text-white/70">Name *</label>
         <input
           value={value.name ?? ''}
           onChange={(e) => onChange({ name: e.target.value, slug: slugify(e.target.value) })}
           placeholder="DJ Karsh"
-          className="w-full rounded-xl border px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-[var(--cv-brand)] text-lg font-medium"
+          className="w-full rounded-xl border px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-(--cv-brand) text-lg font-medium"
           style={{ background: 'var(--cv-elevated)', borderColor: 'var(--cv-border)' }}
         />
       </div>
@@ -56,7 +60,65 @@ function IdentityStep({ value, onChange }: { value: Partial<FormData>; onChange:
   );
 }
 
-// ─── Step 2: Brand ────────────────────────────────────────────────────────────
+// ─── Step 2: Site Type ────────────────────────────────────────────────────────
+
+const SITE_TYPES: { id: SiteType; emoji: string; label: string; desc: string; color: string }[] = [
+  { id: 'PERSONAL', emoji: '🎧', label: 'Personal', desc: 'DJ, musician, artist, creative — a site that matches your energy and books gigs.', color: '#7C3AED' },
+  { id: 'PORTFOLIO', emoji: '💼', label: 'Portfolio', desc: 'Showcase work, skills, and experience. Perfect for developers, designers, and professionals.', color: '#F59E0B' },
+  { id: 'CORPORATE', emoji: '🏢', label: 'Corporate', desc: 'An established business or agency that needs a polished brand presence.', color: '#3B82F6' },
+  { id: 'REDIRECT', emoji: '🔗', label: 'Redirect', desc: "You already have a site — point your CrowdVibe domain there with a 301 redirect.", color: '#10B981' },
+];
+
+function SiteTypeStep({ value, onChange }: { value: Partial<FormData>; onChange: (v: Partial<FormData>) => void }) {
+  return (
+    <div className="space-y-5">
+      <div>
+        <h2 className="text-2xl font-black text-white">What are you building?</h2>
+        <p className="mt-1 text-sm text-white/40">This determines which template powers your site.</p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {SITE_TYPES.map((t) => {
+          const active = value.siteType === t.id;
+          return (
+            <button
+              key={t.id}
+              onClick={() => onChange({ siteType: t.id })}
+              className="flex items-start gap-3 rounded-xl border p-4 text-left transition-all"
+              style={{
+                background: active ? `${t.color}12` : 'var(--cv-elevated)',
+                borderColor: active ? t.color : 'var(--cv-border)',
+                boxShadow: active ? `0 0 16px ${t.color}22` : 'none',
+              }}
+            >
+              <span className="text-2xl">{t.emoji}</span>
+              <div>
+                <p className="font-semibold text-white">{t.label}</p>
+                <p className="mt-0.5 text-xs leading-relaxed text-white/45">{t.desc}</p>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {value.siteType === 'REDIRECT' && (
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-white/70">Destination URL *</label>
+          <input
+            value={value.redirectUrl ?? ''}
+            onChange={(e) => onChange({ redirectUrl: e.target.value })}
+            placeholder="https://yourexistingsite.com"
+            className="w-full rounded-xl border px-4 py-3 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-(--cv-brand)"
+            style={{ background: 'var(--cv-elevated)', borderColor: 'var(--cv-border)' }}
+          />
+          <p className="mt-1.5 text-xs text-white/30">Visitors to your CrowdVibe URL will be permanently redirected here.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Step 3: Brand ────────────────────────────────────────────────────────────
 
 function BrandStep({ value, onChange }: { value: Partial<FormData>; onChange: (v: Partial<FormData>) => void }) {
   const PRESETS = [
@@ -72,7 +134,7 @@ function BrandStep({ value, onChange }: { value: Partial<FormData>; onChange: (v
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-black text-white">Choose your brand colors</h2>
-        <p className="mt-1 text-sm text-white/40">These power the look of your entire booking site.</p>
+        <p className="mt-1 text-sm text-white/40">These power the look of your entire site.</p>
       </div>
 
       <div className="grid grid-cols-3 gap-3">
@@ -114,11 +176,8 @@ function BrandStep({ value, onChange }: { value: Partial<FormData>; onChange: (v
         ))}
       </div>
 
-      {/* Live preview strip */}
       <div className="overflow-hidden rounded-xl border" style={{ borderColor: 'var(--cv-border)' }}>
-        <div className="p-4 text-center text-sm text-white/40" style={{ background: '#0B0B0B' }}>
-          Preview
-        </div>
+        <div className="p-4 text-center text-sm text-white/40" style={{ background: '#0B0B0B' }}>Preview</div>
         <div className="flex items-center justify-between px-5 py-4" style={{ background: 'var(--cv-surface)' }}>
           <span className="font-bold text-white">{value.name ?? 'Your Name'}</span>
           <div className="rounded-lg px-4 py-1.5 text-sm font-semibold text-white" style={{ background: value.brandColor ?? '#7C3AED' }}>
@@ -131,14 +190,14 @@ function BrandStep({ value, onChange }: { value: Partial<FormData>; onChange: (v
   );
 }
 
-// ─── Step 3: Story ────────────────────────────────────────────────────────────
+// ─── Step 4: Story ────────────────────────────────────────────────────────────
 
 function StoryStep({ value, onChange }: { value: Partial<FormData>; onChange: (v: Partial<FormData>) => void }) {
   return (
     <div className="space-y-5">
       <div>
         <h2 className="text-2xl font-black text-white">Tell your story</h2>
-        <p className="mt-1 text-sm text-white/40">This appears on your public site and press kit.</p>
+        <p className="mt-1 text-sm text-white/40">This appears on your public site.</p>
       </div>
       <div>
         <label className="mb-1.5 block text-sm font-medium text-white/70">Bio</label>
@@ -146,8 +205,8 @@ function StoryStep({ value, onChange }: { value: Partial<FormData>; onChange: (v
           rows={5}
           value={value.bio ?? ''}
           onChange={(e) => onChange({ bio: e.target.value })}
-          placeholder="Nigeria's premier Afrobeats DJ. Performing across Lagos, Abuja, and beyond — from intimate lounges to 10,000-seat festivals..."
-          className="w-full resize-none rounded-xl border px-4 py-3 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-[var(--cv-brand)]"
+          placeholder="Nigeria's premier Afrobeats DJ. Performing across Lagos, Abuja, and beyond..."
+          className="w-full resize-none rounded-xl border px-4 py-3 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-(--cv-brand)"
           style={{ background: 'var(--cv-elevated)', borderColor: 'var(--cv-border)' }}
         />
       </div>
@@ -157,7 +216,7 @@ function StoryStep({ value, onChange }: { value: Partial<FormData>; onChange: (v
           value={value.location ?? ''}
           onChange={(e) => onChange({ location: e.target.value })}
           placeholder="Lagos, Nigeria"
-          className="w-full rounded-xl border px-4 py-3 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-[var(--cv-brand)]"
+          className="w-full rounded-xl border px-4 py-3 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-(--cv-brand)"
           style={{ background: 'var(--cv-elevated)', borderColor: 'var(--cv-border)' }}
         />
       </div>
@@ -165,23 +224,29 @@ function StoryStep({ value, onChange }: { value: Partial<FormData>; onChange: (v
   );
 }
 
-// ─── Step 4: Launch ───────────────────────────────────────────────────────────
+// ─── Step 5: Launch ───────────────────────────────────────────────────────────
 
 function LaunchStep({ value }: { value: Partial<FormData> }) {
+  const siteLabel = SITE_TYPES.find((t) => t.id === value.siteType)?.label ?? 'Personal';
+  const isRedirect = value.siteType === 'REDIRECT';
+
   return (
     <div className="space-y-6 text-center">
       <div className="text-6xl">🚀</div>
       <div>
-        <h2 className="text-2xl font-black text-white">You're ready to launch!</h2>
-        <p className="mt-2 text-white/40">Here's what gets created when you hit Launch:</p>
+        <h2 className="text-2xl font-black text-white">You&apos;re ready to launch!</h2>
+        <p className="mt-2 text-white/40">Here&apos;s what gets created when you hit Launch:</p>
       </div>
       <div className="space-y-3 text-left">
         {[
-          { icon: '🌐', text: `Your site at crowdvibe.io/site/${value.slug}` },
-          { icon: '📅', text: 'A live booking wizard clients can use right now' },
-          { icon: '🎵', text: 'A media hub for your mixes and photos' },
-          { icon: '📄', text: `A press kit at crowdvibe.io/site/${value.slug}/press` },
-          { icon: '📊', text: 'A dashboard to manage bookings and revenue' },
+          { icon: '🌐', text: `Your ${siteLabel} site at crowdvibe.io/site/${value.slug}` },
+          ...(isRedirect
+            ? [{ icon: '🔗', text: `Visitors will be redirected to ${value.redirectUrl}` }]
+            : [
+                { icon: '📅', text: 'A live booking wizard clients can use right now' },
+                { icon: '🎵', text: 'A media hub for your mixes and photos' },
+                { icon: '📊', text: 'A dashboard to manage bookings and revenue' },
+              ]),
         ].map((item) => (
           <div key={item.text} className="flex items-start gap-3 rounded-xl border px-4 py-3" style={{ background: 'var(--cv-elevated)', borderColor: 'var(--cv-border)' }}>
             <span className="text-lg">{item.icon}</span>
@@ -201,6 +266,7 @@ export function OnboardingWizard() {
   const [form, setForm] = useState<Partial<FormData>>({
     brandColor: '#7C3AED',
     accentColor: '#F59E0B',
+    siteType: 'PERSONAL',
   });
   const [error, setError] = useState('');
   const [launching, setLaunching] = useState(false);
@@ -211,7 +277,12 @@ export function OnboardingWizard() {
 
   function canProceed() {
     if (step === 0) return !!(form.name?.trim() && form.slug?.trim());
-    if (step === 1) return !!(form.brandColor && form.accentColor);
+    if (step === 1) {
+      if (!form.siteType) return false;
+      if (form.siteType === 'REDIRECT') return !!(form.redirectUrl?.trim());
+      return true;
+    }
+    if (step === 2) return !!(form.brandColor && form.accentColor);
     return true;
   }
 
@@ -238,6 +309,7 @@ export function OnboardingWizard() {
 
   const stepComponents = [
     <IdentityStep key="identity" value={form} onChange={update} />,
+    <SiteTypeStep key="sitetype" value={form} onChange={update} />,
     <BrandStep key="brand" value={form} onChange={update} />,
     <StoryStep key="story" value={form} onChange={update} />,
     <LaunchStep key="launch" value={form} />,

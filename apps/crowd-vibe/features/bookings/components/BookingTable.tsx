@@ -45,7 +45,7 @@ export function BookingTable({ bookings }: Props) {
           <Link
             key={b.id}
             href={`/bookings/${b.id}`}
-            className="block rounded-xl border p-4 transition-colors hover:border-[var(--cv-brand)]"
+            className="block rounded-xl border p-4 transition-colors hover:border-(--cv-brand)"
             style={{ background: 'var(--cv-surface)', borderColor: 'var(--cv-border)' }}
           >
             <div className="flex items-start justify-between gap-2 mb-2">
@@ -76,7 +76,7 @@ export function BookingTable({ bookings }: Props) {
           </thead>
           <tbody style={{ background: 'var(--cv-surface)' }}>
             {bookings.map((b) => (
-              <tr key={b.id} className="border-b last:border-0 hover:bg-white/[0.02]" style={{ borderColor: 'var(--cv-border)' }}>
+              <tr key={b.id} className="border-b last:border-0 hover:bg-white/2" style={{ borderColor: 'var(--cv-border)' }}>
                 <td className="px-4 py-3">
                   <p className="font-medium text-white">{b.clientName}</p>
                   <p className="text-xs text-white/30">{b.clientEmail}</p>
