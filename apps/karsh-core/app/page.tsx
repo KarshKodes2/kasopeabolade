@@ -1,9 +1,15 @@
-import React from 'react';
+import { KCHero } from '@/components/sections/KCHero';
+import { KCServices } from '@/components/sections/KCServices';
+import { KCStats } from '@/components/sections/KCStats';
+import { KCCTA } from '@/components/sections/KCCTA';
 
 export default function Home() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <h1 className="text-3xl font-bold">Welcome to Karsh Core Solutions</h1>
-    </div>
+    <>
+      <KCHero />
+      <KCServices />
+      <KCStats />
+      <KCCTA />
+    </>
   );
 }
