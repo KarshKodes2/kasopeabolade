@@ -1,178 +1,103 @@
-# Karsh Core App - Claude Context
+# Karsh Core App — Claude Context
 
-Corporate website for Karsh Core Solutions.
+Corporate website for Karsh Core Solutions. Captures inbound leads and sends them to the admin dashboard.
 
 ## Overview
 
 | Property | Value |
-|----------|-------|
+| -------- | ----- |
 | **App** | karsh-core |
 | **Path** | `apps/karsh-core/` |
-| **Port** | 3000 (dev) |
+| **Port** | 3004 (dev) |
 | **Framework** | Next.js 15 (App Router) |
-| **Auth** | None (public) |
+| **Auth** | None (public site) |
 
 ## Features
 
-- Products and services showcase
-- Tech blog with markdown support
-- Contact and consultation forms
-- Company information
-- SEO-optimized pages
+- Company overview (Hero, Stats, Services, CTA sections)
+- Services detail page
+- About page (company story + Kasope bio)
+- Contact/consultation form → `Lead` model in DB + Resend email notification
+- SEO: Open Graph, JSON-LD, sitemap, robots.txt
 
 ## Commands
 
 ```bash
-# Development
-npm run dev:karsh-core
-
-# Build
+npm run dev:karsh-core     # → http://localhost:3004
 npm run build:karsh-core
-
-# Lint
-npm run lint -- --filter=karsh-core
 ```
 
 ## Structure
 
-```
+```text
 apps/karsh-core/
 ├── app/
-│   ├── layout.tsx       # Root layout
-│   ├── page.tsx         # Home page
-│   ├── globals.css      # Styles
-│   ├── services/        # Services pages
-│   ├── products/        # Products pages
-│   ├── blog/            # Tech blog
-│   │   ├── page.tsx     # Blog list
-│   │   └── [slug]/      # Blog post
-│   ├── about/           # About company
-│   └── contact/         # Contact form
-├── components/          # App components
-├── content/             # Markdown content
-│   └── blog/            # Blog posts
-├── lib/                 # Utilities
-└── public/              # Static assets
+│   ├── layout.tsx          # Root layout + KCNav + KCFooter
+│   ├── page.tsx            # Home page (KCHero, KCServices, KCStats, KCCTA)
+│   ├── globals.css
+│   ├── about/page.tsx
+│   ├── services/page.tsx
+│   ├── contact/page.tsx
+│   └── api/leads/route.ts  # POST → prisma.lead.create + resend email
+├── components/
+│   ├── layout/
+│   │   ├── KCNav.tsx       # 'use client' — has mouse event handlers
+│   │   └── KCFooter.tsx    # 'use client' — has mouse event handlers
+│   └── sections/
+│       ├── KCHero.tsx
+│       ├── KCServices.tsx
+│       ├── KCStats.tsx
+│       ├── KCCTA.tsx
+│       ├── KCAbout.tsx
+│       ├── KCServicesDetail.tsx
+│       └── KCContactForm.tsx
+└── package.json
 ```
 
 ## Pages
 
 | Route | Description | Type |
-|-------|-------------|------|
-| `/` | Home page | Static |
-| `/services` | Services offered | Static |
-| `/products` | Products showcase | Static |
-| `/blog` | Tech blog | Dynamic |
-| `/blog/[slug]` | Blog post | Dynamic |
-| `/about` | About company | Static |
-| `/contact` | Contact form | Dynamic |
+| ----- | ----------- | ---- |
+| `/` | Home — hero, services, stats, CTA | Static |
+| `/services` | Full services detail | Static |
+| `/about` | Company story + bio | Static |
+| `/contact` | Consultation form | Dynamic |
 
-## Content Management
+## Lead Capture Pattern
 
-### Markdown Blog
+```typescript
+// app/api/leads/route.ts
+export const dynamic = 'force-dynamic';
+import { LeadSchema } from 'utils/validation';
+import { prisma } from 'db';
 
-Blog posts can be written in Markdown:
-
-```
-content/blog/
-├── my-first-post.md
-├── another-post.md
-└── tech-insights.md
-```
-
-### Frontmatter
-
-```markdown
----
-title: "Post Title"
-date: "2025-01-15"
-author: "Author Name"
-tags: ["tech", "web"]
-excerpt: "Brief description"
----
-
-# Post content here...
+export async function POST(req: Request) {
+  const body = await req.json();
+  const data = LeadSchema.parse(body);
+  await prisma.lead.create({ data: { ...data, source: 'karsh-core' } });
+  // send Resend email notification
+}
 ```
 
 ## Dependencies
 
 ```typescript
-// Database (optional, for dynamic content)
-import { prisma } from '@karsh/db';
+// Database (write-only — lead capture)
+import { prisma } from 'db';
 
-// UI Components
-import { Card, Button } from '@karsh/ui';
-```
-
-## Contact Form Pattern
-
-```typescript
-'use client';
-
-import { useState } from 'react';
-
-export function ContactForm() {
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setStatus('loading');
-
-    const formData = new FormData(e.currentTarget);
-    const data = Object.fromEntries(formData);
-
-    const res = await fetch('/api/contact', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-
-    setStatus(res.ok ? 'success' : 'error');
-  }
-
-  return (
-    <form onSubmit={handleSubmit}>
-      {/* form fields */}
-    </form>
-  );
-}
-```
-
-## SEO Configuration
-
-```typescript
-// app/layout.tsx
-export const metadata: Metadata = {
-  title: {
-    default: 'Karsh Core Solutions',
-    template: '%s | Karsh Core',
-  },
-  description: 'Professional solutions for your business.',
-  openGraph: {
-    type: 'website',
-    locale: 'en_US',
-    siteName: 'Karsh Core Solutions',
-  },
-};
+// Validation
+import { LeadSchema } from 'utils/validation';
 ```
 
 ## Environment Variables
 
 ```env
-DATABASE_URL=
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/karsh
+RESEND_API_KEY=
 ```
-
-## Performance Goals
-
-| Metric | Target |
-|--------|--------|
-| LCP | < 2.5s |
-| FID | < 100ms |
-| CLS | < 0.1 |
-| Lighthouse | > 90 |
 
 ## Related
 
 - [Root CLAUDE.md](../../CLAUDE.md)
 - [Database Package](../../packages/db/)
-- [UI Components](../../packages/ui/)
+- [Admin Dashboard](../admin/) — where leads are managed

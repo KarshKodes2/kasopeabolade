@@ -117,7 +117,7 @@ const tenant = await getTenantWithMedia('dj-randy');
 
 ### `getBookedDates(tenantId)`
 
-Returns an array of ISO date strings (`'YYYY-MM-DD'`) for dates with confirmed/paid bookings. Used by the booking wizard calendar to block already-booked dates.
+Returns an array of ISO date strings (`'YYYY-MM-DD'`) for dates with `CONFIRMED`, `DEPOSIT_PAID`, or `COMPLETED` bookings. Used by the booking wizard calendar to block already-booked dates.
 
 ```typescript
 const blocked = await getBookedDates(tenant.id);

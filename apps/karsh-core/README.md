@@ -6,18 +6,19 @@ Leads captured here appear in the Admin dashboard under **Karsh Core → Leads**
 
 ## Features
 
-- Company overview and services showcase
-- Technology consulting and product offerings
-- Case studies section
-- Blog / insights
+- Company overview and value proposition (Hero, Stats, CTA sections)
+- Technology consulting and product offerings (Services page)
+- About page — company story and Kasope's professional bio
 - Contact + consultation form — writes `Lead` records to the shared database
+- Resend email notification to `aboladekasope@gmail.com` on every new lead
 - SEO-optimised with Open Graph tags, JSON-LD, sitemap, robots.txt
 
 ## Tech Stack
 
 - **Framework** — Next.js 15 App Router
 - **Styling** — Tailwind CSS 4
-- **Database** — Prisma 6 via `packages/db` (Lead model)
+- **Database** — Prisma 7 via `packages/db` (Lead model, write-only)
+- **Email** — Resend (lead notification emails)
 - **Language** — TypeScript 5 (strict)
 
 ## Getting Started
@@ -34,7 +35,7 @@ npm run dev:karsh-core   # → http://localhost:3004
 # Shared database URL (leads are stored here)
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/karsh
 
-# Optional: email notifications on new lead
+# Email notifications on new lead
 RESEND_API_KEY=
 ```
 
@@ -43,7 +44,11 @@ RESEND_API_KEY=
 ```text
 Visitor fills consultation form
         ↓
-POST /api/leads  →  prisma.lead.create({ status: 'NEW' })
+POST /api/leads  →  LeadSchema.parse(body)
+        ↓
+prisma.lead.create({ status: 'NEW', source: 'karsh-core' })
+        ↓
+resend.emails.send({ to: 'aboladekasope@gmail.com', ... })
         ↓
 Lead appears in Admin → Karsh Core → Leads
         ↓
@@ -55,15 +60,26 @@ Status updated manually: CONTACTED → PROPOSAL_SENT → NEGOTIATION → WON / L
 ```text
 apps/karsh-core/
 ├── app/
-│   ├── layout.tsx        # Root layout + global metadata
-│   ├── page.tsx          # Home — company overview
-│   ├── globals.css       # Global styles
-│   ├── services/         # Services offered
-│   ├── products/         # Products showcase (CrowdVibe featured)
-│   ├── blog/             # Insights and tech blog
-│   ├── case-studies/     # Client work
-│   └── contact/          # Consultation form → Lead capture
-├── public/
+│   ├── layout.tsx          # Root layout + global metadata + KCNav + KCFooter
+│   ├── page.tsx            # Home — KCHero, KCServices, KCStats, KCCTA
+│   ├── globals.css         # Corporate design tokens
+│   ├── about/page.tsx      # KCAbout — company story + Kasope bio
+│   ├── services/page.tsx   # KCServicesDetail — full services list
+│   ├── contact/page.tsx    # KCContactForm — consultation form
+│   └── api/
+│       └── leads/route.ts  # POST → Lead + Resend notification
+├── components/
+│   ├── layout/
+│   │   ├── KCNav.tsx       # Navigation (client component)
+│   │   └── KCFooter.tsx    # Footer (client component)
+│   └── sections/
+│       ├── KCHero.tsx
+│       ├── KCServices.tsx
+│       ├── KCStats.tsx
+│       ├── KCCTA.tsx
+│       ├── KCAbout.tsx
+│       ├── KCServicesDetail.tsx
+│       └── KCContactForm.tsx
 └── package.json
 ```
 
@@ -71,13 +87,10 @@ apps/karsh-core/
 
 | Route | Description |
 | ----- | ----------- |
-| `/` | Home — company overview and value proposition |
-| `/services` | Technology consulting, product development, etc. |
-| `/products` | Products built by Karsh Core (incl. CrowdVibe) |
-| `/blog` | Tech blog and insights |
-| `/blog/[slug]` | Individual post |
-| `/case-studies` | Client work and outcomes |
-| `/contact` | Consultation form (writes Lead to DB) |
+| `/` | Home — hero, services overview, stats, CTA |
+| `/services` | Full technology consulting service detail |
+| `/about` | Company story and Kasope's professional background |
+| `/contact` | Consultation form (writes Lead to DB + sends email) |
 
 ## Deployment
 

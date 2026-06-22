@@ -15,9 +15,9 @@ This document defines the commit message standards for the Kasope Abolade monore
 ### Examples
 
 ```
-admin: (feat:) implement user management dashboard
-portfolio: (fix:) resolve image loading issue on projects page
-db: (chore:) add migration for user phone field
+admin: (feat:) implement analytics charts for bookings and leads
+crowd-vibe: (fix:) resolve booking wizard step validation
+db: (chore:) add migration for event and newsletter models
 ui: (refactor:) simplify Button component props
 ```
 
@@ -29,28 +29,28 @@ Use the app or package name as the scope:
 |-------|-------------|
 | `admin` | Changes to apps/admin |
 | `portfolio` | Changes to apps/portfolio |
-| `dj-karsh` | Changes to apps/dj-karsh |
+| `crowd-vibe` | Changes to apps/crowd-vibe |
 | `karsh-core` | Changes to apps/karsh-core |
 | `db` | Changes to packages/db |
 | `ui` | Changes to packages/ui |
 | `utils` | Changes to packages/utils |
-| `config` | Changes to packages/config |
 | `root` | Changes to root config files |
 | `ci` | Changes to CI/CD workflows |
 | `docs` | Documentation changes |
 
 For changes spanning multiple packages:
+
 ```
-admin,db: (feat:) add user profile with phone field
+crowd-vibe,db: (feat:) add events model and events dashboard
 ```
 
 ## Types
 
 | Type | Description | Example |
 |------|-------------|---------|
-| `feat` | New feature | `feat: add dark mode toggle` |
+| `feat` | New feature | `feat: add google calendar sync` |
 | `fix` | Bug fix | `fix: resolve null pointer in auth` |
-| `chore` | Maintenance | `chore: update dependencies` |
+| `chore` | Maintenance | `chore: upgrade prisma to v7` |
 | `docs` | Documentation | `docs: update README` |
 | `style` | Code style | `style: format with prettier` |
 | `refactor` | Restructuring | `refactor: extract validation logic` |
@@ -76,64 +76,27 @@ admin,db: (feat:) add user profile with phone field
 
 ## Body (Optional)
 
-Use the body for:
-- Explaining **why** the change was made
-- Providing context for complex changes
-- Listing breaking changes
+Use the body for explaining why the change was made or listing breaking changes.
 
 ```
-admin: (refactor:) restructure authentication flow
+db: (chore:) upgrade Prisma to v7 with lazy PrismaClient singleton
 
-The previous auth flow had multiple entry points which made it
-difficult to maintain. This refactor consolidates all auth logic
-into a single module with clear boundaries.
-
-Changes:
-- Move auth utils to shared lib
-- Consolidate session handling
-- Add proper TypeScript types
+- Added prisma.config.ts (defineConfig) to handle datasource URL for CLI
+- Removed url from schema.prisma datasource block (Prisma 7 requirement)
+- Switched singletons to lazy Proxy pattern — defers new PrismaClient()
+  until first use, preventing build-time failures without DATABASE_URL
+- Added export const dynamic = 'force-dynamic' to all API routes
 ```
 
 ## Footer (Optional)
 
-Use the footer for:
-- Issue references
-- Breaking changes
-- Co-authors
-
 ```
-admin: (feat:) implement SSO integration
+crowd-vibe: (feat:) implement multi-type tenant sites
 
-BREAKING CHANGE: The login endpoint now requires a redirect_uri parameter.
+BREAKING CHANGE: Tenants now require a siteType field.
 
 Closes #42
-Co-Authored-By: Claude <noreply@anthropic.com>
-```
-
-## Breaking Changes
-
-For breaking changes, add `BREAKING CHANGE:` in the footer:
-
-```
-db: (feat:) change user role enum values
-
-BREAKING CHANGE: Role enum values have changed:
-- OPERATOR -> MEMBER
-- VIEWER -> GUEST
-
-Run migration to update existing data.
-```
-
-## Multi-Package Changes
-
-When a change spans multiple packages:
-
-```
-admin,db: (feat:) add user profile feature
-
-- Add UserProfile model to database schema
-- Create user profile API endpoints
-- Add profile management UI
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 ```
 
 ## Automated Commit Format
@@ -143,55 +106,23 @@ When Claude generates commits, they should follow:
 ```
 {scope}: ({type}:) {description}
 
-Co-Authored-By: Claude <noreply@anthropic.com>
-```
-
-## Pre-Commit Hooks
-
-The repository uses pre-commit hooks to:
-1. Run linting
-2. Run type checking
-3. Validate commit message format
-
-```bash
-# .husky/commit-msg
-#!/bin/sh
-npx commitlint --edit $1
-```
-
-## Commitlint Configuration
-
-```javascript
-// commitlint.config.js
-module.exports = {
-  extends: ['@commitlint/config-conventional'],
-  rules: {
-    'scope-enum': [2, 'always', [
-      'admin', 'portfolio', 'dj-karsh', 'karsh-core',
-      'db', 'ui', 'utils', 'config',
-      'root', 'ci', 'docs'
-    ]],
-    'type-enum': [2, 'always', [
-      'feat', 'fix', 'chore', 'docs', 'style',
-      'refactor', 'test', 'perf', 'build', 'ci'
-    ]],
-  },
-};
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 ```
 
 ## Quick Reference
 
 ```
 Good commits:
-✓ admin: (feat:) add user search functionality
-✓ db: (fix:) resolve migration conflict
-✓ ui: (refactor:) simplify Card component
-✓ portfolio,admin: (feat:) add shared header component
+✓ admin: (feat:) add analytics charts for bookings and leads
+✓ crowd-vibe: (fix:) resolve booking wizard eventType mismatch
+✓ db: (chore:) upgrade Prisma to v7 with pg adapter
+✓ portfolio,admin: (feat:) add blog post management
 
 Bad commits:
 ✗ updated stuff
 ✗ fix bug
 ✗ WIP
-✗ admin: Added new feature (use imperative: "add" not "added")
-✗ ADMIN: (FEAT:) ADD FEATURE (use lowercase)
+✗ admin: Added new feature   (use imperative: "add" not "added")
+✗ ADMIN: (FEAT:) ADD FEATURE  (use lowercase)
+✗ dj-karsh: anything          (app no longer exists — use crowd-vibe)
 ```

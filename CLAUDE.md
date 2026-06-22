@@ -10,7 +10,7 @@ This is the Kasope Abolade monorepo — a full-stack Next.js monorepo powering m
 | **Framework** | Next.js 15 (App Router) |
 | **Language** | TypeScript 5 (strict) |
 | **Styling** | Tailwind CSS 4 |
-| **Database** | PostgreSQL 15 + Prisma 6 |
+| **Database** | PostgreSQL 15 + Prisma 7 + pg driver adapter |
 | **Auth** | NextAuth.js v5 (GitHub OAuth + email magic link) |
 | **Build** | Turbo 2.5 + npm workspaces |
 | **Payments** | Paystack (₦) + Stripe (international) |
@@ -30,7 +30,7 @@ This is the Kasope Abolade monorepo — a full-stack Next.js monorepo powering m
 
 | Package | Path | Purpose |
 |---------|------|---------|
-| db | `packages/db/` | Prisma 6 schema + client (multi-tenant SaaS schema) |
+| db | `packages/db/` | Prisma 7 schema + client, `@prisma/adapter-pg` driver, `prisma.config.ts` |
 | ui | `packages/ui/` | Shared UI components (Button, Card, Badge, Modal, Table, Stat, Avatar) |
 | utils | `packages/utils/` | RBAC helpers, Zod validation schemas, tenant query helpers |
 
@@ -118,7 +118,7 @@ Available slash commands (see `.claude/` for details):
 3. **Database Access**: All DB operations go through `packages/db`
 4. **Shared Components**: Use `packages/ui` for reusable UI
 5. **Utilities**: Use `packages/utils` for shared logic (RBAC, validation, tenant helpers)
-6. **Prisma**: Always use workspace-pinned v6 (`npm run --workspace=db generate`), never `npx prisma` which fetches latest
+6. **Prisma**: Always use workspace-pinned v7 (`npm run --workspace=db generate`). Never `npx prisma` — fetches whatever latest is. Datasource URL lives in `packages/db/prisma.config.ts` (CLI tools) and `DATABASE_URL` env var (runtime via `@prisma/adapter-pg`).
 
 ## Environment Variables
 
@@ -160,7 +160,7 @@ DATABASE_URL=  (same as db package)
 
 ## Commit Convention
 
-```
+```text
 {scope}: ({type}:) {description}
 
 Example: crowd-vibe: (feat:) add booking wizard

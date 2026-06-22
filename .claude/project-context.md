@@ -1,51 +1,43 @@
 # Project Context
 
-This document provides comprehensive context about the Kasope Abolade monorepo for Claude agents.
+Comprehensive context about the Kasope Abolade monorepo for Claude agents.
 
 ## Project Overview
 
 **Name**: Kasope Abolade Monorepo
 **Type**: Full-stack Next.js monorepo
-**Purpose**: Multiple personal brand and business applications
+**Purpose**: Multiple personal brand and business applications under Karsh Core Solutions
 
 ## Architecture
 
 ### Monorepo Structure
 
-```
+```text
 kasopeabolade/
 ├── apps/                    # Application frontends
-│   ├── admin/              # Internal admin dashboard
-│   ├── portfolio/          # Public portfolio site
-│   ├── dj-karsh/           # DJ entertainment platform
-│   └── karsh-core/         # Corporate website
+│   ├── admin/              # Super-admin dashboard (port 3001)
+│   ├── portfolio/          # Public portfolio site (port 3002)
+│   ├── crowd-vibe/         # Multi-tenant SaaS entertainment platform (port 3003)
+│   └── karsh-core/         # Corporate website (port 3004)
 ├── packages/               # Shared packages
-│   ├── db/                 # Prisma database package
+│   ├── db/                 # Prisma 7 database package + pg adapter
 │   ├── ui/                 # Shared UI components
-│   └── utils/              # Shared utilities
-├── scripts/                # Build and setup scripts
+│   └── utils/              # Shared utilities (RBAC, validation, tenant helpers)
+├── scripts/                # Database and setup scripts
 ├── e2e/                    # Playwright E2E tests
 └── .claude/                # Claude agent configuration
 ```
 
-### Package Dependencies
+### Package Import Paths
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                        apps/*                           │
-│  ┌─────────┬─────────┬───────────┬────────────┐        │
-│  │  admin  │portfolio│  dj-karsh │ karsh-core │        │
-│  └────┬────┴────┬────┴─────┬─────┴──────┬─────┘        │
-│       │         │          │            │              │
-│       └─────────┴──────────┴────────────┘              │
-│                         │                              │
-│              ┌──────────┼──────────┐                   │
-│              ▼          ▼          ▼                   │
-│         ┌────────┐ ┌────────┐ ┌────────┐               │
-│         │   db   │ │   ui   │ │  utils │               │
-│         └────────┘ └────────┘ └────────┘               │
-│                    packages/*                          │
-└─────────────────────────────────────────────────────────┘
+Apps import from shared packages using the workspace package name (NOT `@karsh/` prefixes):
+
+```typescript
+import { prisma } from 'db';           // packages/db
+import { Button, Card } from 'ui';     // packages/ui
+import { hasAccess } from 'utils/rbac'; // packages/utils
+import { BookingCreateSchema } from 'utils/validation';
+import { getTenantBySlug } from 'utils/tenant';
 ```
 
 ## Technology Stack
@@ -53,140 +45,147 @@ kasopeabolade/
 ### Frontend
 
 | Technology | Version | Usage |
-|------------|---------|-------|
+| ---------- | ------- | ----- |
 | Next.js | 15.3.5 | App Router framework |
 | React | 19.0.0 | UI library |
-| TypeScript | 5.4.0 | Type safety |
-| Tailwind CSS | 4.1.11 | Styling |
+| TypeScript | 5.4.0 | Type safety (strict) |
+| Tailwind CSS | 4.x | Styling |
+| Framer Motion | 12.x | UI animations (primary) |
+| GSAP | 3.x | Canvas/scroll animations (heavy use only) |
 
 ### Backend
 
 | Technology | Version | Usage |
-|------------|---------|-------|
+| ---------- | ------- | ----- |
 | Next.js API Routes | 15.3.5 | API endpoints |
-| NextAuth.js | Latest | Authentication |
-| Prisma | 6.11.1 | ORM |
+| NextAuth.js | v5 | Authentication |
+| Prisma | 7.8.0 | ORM |
+| `@prisma/adapter-pg` | 7.8.0 | pg driver adapter |
 | PostgreSQL | 15 | Database |
+| Resend | v4 | Transactional email |
+| Stripe | v17 | International payments |
+| Paystack | latest | Nigerian/African payments |
+| Cloudinary | v2 | Media storage |
 
 ### Build Tools
 
 | Technology | Version | Usage |
-|------------|---------|-------|
+| ---------- | ------- | ----- |
 | Turbo | 2.5.4 | Monorepo orchestration |
 | npm workspaces | 8.5.0 | Package management |
-| tsx | 4.20.3 | TypeScript execution |
+| tsx | 4.x | TypeScript execution |
 
 ### Testing
 
 | Technology | Version | Usage |
-|------------|---------|-------|
-| Vitest | Latest | Unit tests |
+| ---------- | ------- | ----- |
 | Playwright | 1.54.1 | E2E tests |
-| React Testing Library | Latest | Component tests |
 
 ### Code Quality
 
 | Technology | Version | Usage |
-|------------|---------|-------|
+| ---------- | ------- | ----- |
 | ESLint | 9.31.0 | Linting |
 | Prettier | 3.6.2 | Formatting |
 | TypeScript strict | true | Type checking |
 
 ## Apps Overview
 
-### apps/admin
+### apps/admin (port 3001)
 
-**Purpose**: Internal dashboard for managing content, users, and bookings.
+**Purpose**: Super-admin dashboard for managing all products in the monorepo.
 
 **Features**:
-- User management with RBAC
-- Project CRUD operations
-- Booking management
-- Multi-tenant support
 
-**Auth**: NextAuth.js with GitHub OAuth
+- Global KPI overview (tenants, bookings, leads, projects)
+- Recharts analytics (monthly bookings, lead funnel, plan distribution)
+- CrowdVibe: tenant management, booking management (cross-tenant)
+- Portfolio: project CRUD + blog post management
+- Karsh Core: lead CRM pipeline
+- ADMIN team member management
+- Dialog-driven CRUD — no separate /new or /edit pages
+
+**Auth**: NextAuth.js v5 with GitHub OAuth — SUPER_ADMIN only
 
 **URL**: http://localhost:3001 (dev)
 
-### apps/portfolio
+### apps/portfolio (port 3002)
 
-**Purpose**: Public-facing portfolio showcasing projects and blog.
-
-**Features**:
-- Project showcase
-- Markdown blog
-- SEO optimization
-- Contact form
-
-**URL**: http://localhost:3002 (dev)
-
-### apps/dj-karsh
-
-**Purpose**: Entertainment booking platform for DJ Karsh.
+**Purpose**: Kasope's public developer portfolio.
 
 **Features**:
-- Event booking system
-- Media gallery
-- 3D interactive homepage (planned)
-- Blog and news
 
-**Tech**: React Three Fiber (planned), Framer Motion (planned)
+- 6-theme system (Light/Dark/Forest/Ocean/Rose/Slate)
+- Hero with GSAP particle canvas + Framer Motion letter animation
+- Projects (from DB, static fallback), blog, newsletter, resources, contact, search
+- DM Sans + DM Serif Display fonts
 
-**URL**: http://localhost:3003 (dev)
+**URL**: http://localhost:3002 (dev) → kasope.dev (prod)
 
-### apps/karsh-core
+### apps/crowd-vibe (port 3003)
 
-**Purpose**: Corporate website for Karsh Core Solutions.
+**Purpose**: Multi-tenant SaaS entertainment booking platform.
 
 **Features**:
-- Products and services
-- Tech blog
-- Contact forms
-- Company information
 
-**URL**: http://localhost:3000 (dev)
+- Custom domain routing via Next.js Edge Middleware
+- Three site templates: PERSONAL (DJ/MC), PORTFOLIO, CORPORATE
+- REDIRECT type (middleware 301)
+- 5-step booking wizard (Paystack + Stripe)
+- Tenant dashboard: bookings, media, events, settings, billing, analytics
+- Google Calendar sync, PDF invoice generation
+- Newsletter subscriber management
+
+**URL**: http://localhost:3003 (dev) → crowdvibe.io (prod)
+
+### apps/karsh-core (port 3004)
+
+**Purpose**: Corporate website + lead capture.
+
+**Features**:
+
+- Home (Hero, Services, Stats, CTA), Services, About, Contact pages
+- Contact form → Lead model + Resend email notification
+- SEO: OG, JSON-LD, sitemap, robots
+
+**URL**: http://localhost:3004 (dev) → karshcoresolutions.com (prod)
 
 ## Packages Overview
 
 ### packages/db
 
-**Purpose**: Centralized database package with Prisma.
+**Purpose**: Centralised Prisma 7 database package with pg driver adapter.
 
-**Contents**:
-- `schema.prisma` - Database schema
-- `lib/prisma.ts` - Singleton Prisma client
-- `migrations/` - Database migrations
-- `seed.ts` - Seed data
+**Key files**:
 
-**Models**:
-- User (with RBAC roles)
-- Project
-- Booking
-- Tenant (multi-tenancy)
-- Account, Session, VerificationToken (NextAuth)
+- `schema.prisma` — Full multi-tenant SaaS schema (no `url` in datasource)
+- `prisma.config.ts` — Datasource URL for CLI tools (migrate, generate, studio)
+- `index.ts` — Runtime client using `@prisma/adapter-pg` + `pg.Pool`
+- `lib/prisma.ts` — Alternative singleton with dev logging
+- `migrations/` — Prisma migration history
+- `seed.ts` — Seed data
+
+**Models**: `Tenant`, `User`, `Account`, `Session`, `VerificationToken`, `Booking`, `MediaAsset`, `Event`, `NewsletterSubscriber`, `Lead`, `Subscription`, `Project`
+
+**Key enums**: `Role`, `TenantPlan`, `TenantStatus`, `EventType`, `BookingStatus`, `ServiceType`, `MediaType`, `LeadStatus`, `SubscriptionStatus`
 
 ### packages/ui
 
 **Purpose**: Shared React UI components.
 
-**Structure**:
-```
-packages/ui/
-├── components/
-│   └── index.ts
-├── hooks/
-├── utils/
-│   └── cn.ts
-└── package.json
-```
+**Components**: `Button`, `Card`, `Badge`, `Modal`, `Table`, `Stat`, `Avatar`, `Input`, `Select`
+
+**Import**: `import { Button, Card } from 'ui';`
 
 ### packages/utils
 
 **Purpose**: Shared utility functions.
 
 **Contents**:
-- `rbac.ts` - Role-based access control
-- `validation.ts` (planned) - Zod schemas
+
+- `rbac.ts` — `hasAccess()`, `assertAccess()`, role hierarchy
+- `validation.ts` — Zod schemas: `BookingCreateSchema`, `TenantOnboardingSchema`, `TenantSettingsSchema`, `MediaUploadSchema`, `LeadSchema`
+- `tenant.ts` — DB helpers: `getTenantBySlug`, `getTenantByDomain`, `getTenantWithMedia`, `getBookedDates`
 
 ## Database Schema
 
@@ -194,228 +193,75 @@ packages/ui/
 
 ```typescript
 enum Role {
-  SUPER_ADMIN = 'SUPER_ADMIN', // Full system access
-  ADMIN = 'ADMIN',             // Tenant admin
-  MEMBER = 'MEMBER',           // Standard user
-  GUEST = 'GUEST',             // Read-only
+  SUPER_ADMIN = 'SUPER_ADMIN', // Full system access — admin app only
+  ADMIN       = 'ADMIN',       // Scoped sections in admin app
+  MEMBER      = 'MEMBER',      // Standard CrowdVibe tenant user
+  GUEST       = 'GUEST',       // Read-only
 }
 ```
 
-### Multi-Tenancy
+### CrowdVibe Multi-Tenancy
 
-The database supports multi-tenancy:
-- `Tenant` model for organizations
-- `tenantId` on User and Project
-- Middleware for tenant isolation
-
-### Relationships
-
-```
-Tenant 1──────────N User
-User   1──────────N Project
-User   1──────────N Booking
-User   1──────────N Account
-User   1──────────N Session
-```
-
-## Authentication Flow
-
-```
-┌─────────┐     ┌──────────────┐     ┌──────────┐
-│  User   │────▶│   NextAuth   │────▶│  GitHub  │
-└─────────┘     └──────────────┘     └──────────┘
-                       │
-                       ▼
-                ┌──────────────┐
-                │   Session    │
-                │   (DB/JWT)   │
-                └──────────────┘
-                       │
-                       ▼
-                ┌──────────────┐
-                │    RBAC      │
-                │   Check      │
-                └──────────────┘
+```text
+Tenant 1──────N User
+Tenant 1──────N Booking
+Tenant 1──────N MediaAsset
+Tenant 1──────N Event
+Tenant 1──────N NewsletterSubscriber
+Tenant 1──────N Subscription
 ```
 
 ## API Conventions
 
-### Route Structure
+### Route Pattern
 
-```
-apps/{app}/app/api/
-├── auth/                    # NextAuth routes
-│   └── [...nextauth]/
-├── projects/                # Resource routes
-│   ├── route.ts            # GET (list), POST (create)
-│   └── [id]/
-│       └── route.ts        # GET, PUT, DELETE
-└── health/
-    └── route.ts            # Health check
-```
-
-### Response Format
+All API routes MUST include `export const dynamic = 'force-dynamic'` as the first line — this prevents Next.js from attempting to statically pre-render API routes during build when `DATABASE_URL` is not available.
 
 ```typescript
-// Success
-{
-  data: T | T[],
-  meta?: {
-    total: number,
-    limit: number,
-    offset: number,
-  }
-}
+export const dynamic = 'force-dynamic';
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from 'db';
 
-// Error
-{
-  error: {
-    code: string,
-    message: string,
-    details?: object,
-  }
-}
-```
-
-### Status Codes
-
-| Code | Usage |
-|------|-------|
-| 200 | Success |
-| 201 | Created |
-| 400 | Bad Request (validation) |
-| 401 | Unauthorized |
-| 403 | Forbidden |
-| 404 | Not Found |
-| 500 | Internal Error |
-
-## Code Conventions
-
-### File Naming
-
-```
-# Components
-ComponentName.tsx
-ComponentName.test.tsx
-
-# Utilities
-utilityName.ts
-utilityName.test.ts
-
-# API Routes
-route.ts
-route.test.ts
-```
-
-### Import Order
-
-```typescript
-// 1. React/Next.js
-import { useState } from 'react';
-import { NextResponse } from 'next/server';
-
-// 2. External packages
-import { z } from 'zod';
-
-// 3. Internal packages
-import { prisma } from '@karsh/db';
-import { Button } from '@karsh/ui';
-import { hasAccess } from '@karsh/utils/rbac';
-
-// 4. Relative imports
-import { LocalComponent } from './LocalComponent';
-```
-
-### TypeScript Patterns
-
-```typescript
-// Use interfaces for objects
-interface UserProps {
-  name: string;
-  email: string;
-}
-
-// Use type for unions/primitives
-type Role = 'ADMIN' | 'MEMBER' | 'GUEST';
-
-// Avoid any, use unknown
-function parseInput(input: unknown): UserProps {
-  // validate and cast
-}
-
-// Use generics for reusable types
-function useData<T>(fetcher: () => Promise<T>): T | null {
+export async function GET(req: NextRequest) {
   // ...
 }
 ```
 
+### Auth Pattern
+
+```typescript
+import { auth } from '@/shared/lib/auth'; // crowd-vibe
+// or
+import { auth } from '@/lib/auth';         // admin
+
+const session = await auth();
+if (!session) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+assertAccess(session.user.role, [Role.SUPER_ADMIN]);
+```
+
+## Commit Convention
+
+```text
+{scope}: ({type}:) {description}
+
+Scopes: admin, portfolio, crowd-vibe, karsh-core, db, ui, utils, root, ci, docs
+Types:  feat, fix, chore, docs, style, refactor, test, perf, build, ci
+```
+
 ## Deployment
 
-### Platforms
-
-| Platform | Usage |
-|----------|-------|
-| Vercel | Next.js apps |
-| Railway | Database + apps |
-| Docker | Self-hosted |
-
-### Environment Tiers
-
-| Tier | Purpose | Deploy |
-|------|---------|--------|
-| Preview | PR testing | Auto on PR |
-| Staging | Pre-prod | Auto on main |
-| Production | Live | Manual |
+| App | Platform | Reason |
+| --- | -------- | ------ |
+| crowd-vibe | Vercel | Edge Middleware for custom domain routing |
+| portfolio | Vercel | Free tier, near-static |
+| karsh-core | Vercel | Free tier |
+| admin | Railway | Internal tool |
+| PostgreSQL | Neon | Serverless Postgres, Vercel-native |
 
 ## CI/CD
 
-### GitHub Actions
+GitHub Actions workflows:
 
-- `dj-karsh.yml` - Lint/build dj-karsh
-- `portfolio.yml` - Lint/build portfolio
-
-### Pipeline
-
-```
-Push ─▶ Lint ─▶ Type Check ─▶ Test ─▶ Build ─▶ Deploy
-```
-
-## Security
-
-### Authentication
-
-- NextAuth.js with GitHub OAuth
-- Session stored in database
-- CSRF protection enabled
-
-### Authorization
-
-- RBAC via `@karsh/utils/rbac`
-- Role checks on API routes
-- Tenant isolation middleware
-
-### Secrets
-
-- Environment variables for secrets
-- `.env` in `.gitignore`
-- Vercel/Railway encrypted vars
-
-## Performance
-
-### Build Optimization
-
-- Turbo for caching
-- Turbopack for dev server
-- Tree shaking enabled
-
-### Runtime Optimization
-
-- Server Components by default
-- Image optimization via next/image
-- Code splitting automatic
-
-### Database Optimization
-
-- Prisma select for partial results
-- Pagination for lists
-- Indexes on foreign keys
+- `crowd-vibe.yml` — Lint → Type check → Build
+- `admin.yml` — Lint → Type check → Build
+- `portfolio.yml` — Lint → Build → E2E

@@ -1,14 +1,14 @@
 # Quick Start Guide
 
-Welcome to the Kasope Abolade monorepo! This guide will help you get started quickly with Claude Code.
+Welcome to the Kasope Abolade monorepo. This guide covers available slash commands, workflows, and common tasks for Claude Code.
 
 ## Available Slash Commands
 
 ### Core Development
 
 | Command | Description | Usage |
-|---------|-------------|-------|
-| `/architect` | Validate monorepo architecture | `/architect admin` |
+| ------- | ----------- | ----- |
+| `/architect` | Validate monorepo architecture | `/architect crowd-vibe` |
 | `/reviewer` | Code review for PRs | `/reviewer apps/admin` |
 | `/tester` | Generate tests | `/tester packages/utils` |
 | `/cleanup` | Remove dead code | `/cleanup all` |
@@ -16,32 +16,32 @@ Welcome to the Kasope Abolade monorepo! This guide will help you get started qui
 ### Database
 
 | Command | Description | Usage |
-|---------|-------------|-------|
+| ------- | ----------- | ----- |
 | `/db-manager` | Database operations | `/db-manager migrate create add-field` |
 
 ### UI Development
 
 | Command | Description | Usage |
-|---------|-------------|-------|
+| ------- | ----------- | ----- |
 | `/ui-builder` | Create UI components | `/ui-builder create Button` |
 
 ### Security & Quality
 
 | Command | Description | Usage |
-|---------|-------------|-------|
+| ------- | ----------- | ----- |
 | `/security-auditor` | Security audit | `/security-auditor all` |
 | `/performance` | Performance analysis | `/performance portfolio` |
 
 ### Documentation
 
 | Command | Description | Usage |
-|---------|-------------|-------|
+| ------- | ----------- | ----- |
 | `/doc-writer` | Generate docs | `/doc-writer apps/admin api` |
 
 ### Deployment
 
 | Command | Description | Usage |
-|---------|-------------|-------|
+| ------- | ----------- | ----- |
 | `/deployer` | Deploy apps | `/deployer admin production` |
 
 ---
@@ -49,8 +49,8 @@ Welcome to the Kasope Abolade monorepo! This guide will help you get started qui
 ## Workflows
 
 | Workflow | Description | Usage |
-|----------|-------------|-------|
-| `new-feature` | Implement new feature | `/workflow new-feature admin user-mgmt` |
+| -------- | ----------- | ----- |
+| `new-feature` | Implement new feature | `/workflow new-feature crowd-vibe google-calendar` |
 | `db-migration` | Safe database migration | `/workflow db-migration create add-user-phone` |
 | `deploy-app` | Deploy single app | `/workflow deploy-app portfolio production` |
 | `pr-review` | Complete PR review | `/workflow pr-review 42` |
@@ -59,17 +59,17 @@ Welcome to the Kasope Abolade monorepo! This guide will help you get started qui
 
 ## Project Structure
 
-```
+```text
 kasopeabolade/
 ├── apps/
-│   ├── admin/          # Internal dashboard
-│   ├── portfolio/      # Public portfolio
-│   ├── dj-karsh/       # DJ booking platform
-│   └── karsh-core/     # Corporate site
+│   ├── admin/          # Super-admin dashboard (port 3001)
+│   ├── portfolio/      # Public portfolio (port 3002)
+│   ├── crowd-vibe/     # Multi-tenant SaaS platform (port 3003)
+│   └── karsh-core/     # Corporate site (port 3004)
 ├── packages/
-│   ├── db/             # Database (Prisma)
+│   ├── db/             # Prisma 7 + pg adapter
 │   ├── ui/             # Shared components
-│   └── utils/          # Shared utilities
+│   └── utils/          # RBAC, validation, tenant helpers
 └── .claude/            # Claude configuration
 ```
 
@@ -80,40 +80,28 @@ kasopeabolade/
 ### 1. Setup Environment
 
 ```bash
-# Install dependencies
 npm install
-
-# Start database
 npm run start:db
-
-# Sync database
 npm run db:sync
-
-# Seed data
 npm run seed
 ```
 
 ### 2. Start Development
 
 ```bash
-# Start all apps
-npm run dev
-
-# Start specific app
-npm run dev:admin
-npm run dev:portfolio
-npm run dev:dj-karsh
-npm run dev:karsh-core
+npm run dev               # All apps
+npm run dev:admin         # Admin only     → localhost:3001
+npm run dev:portfolio     # Portfolio only → localhost:3002
+npm run dev:crowd-vibe    # CrowdVibe only → localhost:3003
+npm run dev:karsh-core    # Karsh Core only → localhost:3004
 ```
 
 ### 3. Run Tests
 
 ```bash
-# Run all tests
-npm run test
-
-# Run E2E tests
 npm run e2e
+npm run check-types
+npm run lint
 ```
 
 ---
@@ -122,46 +110,53 @@ npm run e2e
 
 ### Add a New Feature
 
-```
-/workflow new-feature admin user-management
+```text
+/workflow new-feature crowd-vibe analytics-dashboard
 ```
 
 ### Create a Database Migration
 
-```
-/db-manager migrate create add-user-profile
+```text
+/db-manager migrate create add-google-calendar-fields
 ```
 
 ### Deploy an App
 
-```
-/deployer admin production
+```text
+/deployer crowd-vibe production
 ```
 
 ### Run Security Audit
 
-```
+```text
 /security-auditor all
-```
-
-### Generate Documentation
-
-```
-/doc-writer apps/admin api
 ```
 
 ---
 
 ## Environment Variables
 
-Copy `.env.example` to `.env` and configure:
+Each app has its own `.env.local`. Shared DB URL goes in `packages/db/.env`:
 
 ```env
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/karsh"
-NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="your-secret"
-GITHUB_ID="your-github-id"
-GITHUB_SECRET="your-github-secret"
+# packages/db/.env
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/karsh
+
+# apps/crowd-vibe/.env.local
+NEXTAUTH_URL=http://localhost:3003
+NEXTAUTH_SECRET=your-secret
+GITHUB_ID=your-github-id
+GITHUB_SECRET=your-github-secret
+STRIPE_SECRET_KEY=sk_live_...
+PAYSTACK_SECRET_KEY=sk_live_...
+CLOUDINARY_CLOUD_NAME=
+RESEND_API_KEY=
+NEXT_PUBLIC_APP_URL=https://crowdvibe.io
+
+# apps/admin/.env.local
+NEXTAUTH_URL=http://localhost:3001
+NEXTAUTH_SECRET=your-secret
+DATABASE_URL=  # same as packages/db/.env
 ```
 
 ---
@@ -171,24 +166,40 @@ GITHUB_SECRET="your-github-secret"
 ### Package Imports
 
 ```typescript
-// Database
-import { prisma } from '@karsh/db';
+// Database (workspace name: 'db')
+import { prisma } from 'db';
 
-// UI Components
-import { Button, Card } from '@karsh/ui';
+// UI Components (workspace name: 'ui')
+import { Button, Card, Badge, Table, Stat } from 'ui';
 
-// Utilities
-import { hasAccess, assertAccess } from '@karsh/utils/rbac';
+// Utilities (workspace name: 'utils')
+import { hasAccess, assertAccess } from 'utils/rbac';
+import { BookingCreateSchema, LeadSchema } from 'utils/validation';
+import { getTenantBySlug, getBookedDates } from 'utils/tenant';
 ```
 
 ### App Ports
 
 | App | Port |
-|-----|------|
-| karsh-core | 3000 |
+| --- | ---- |
 | admin | 3001 |
 | portfolio | 3002 |
-| dj-karsh | 3003 |
+| crowd-vibe | 3003 |
+| karsh-core | 3004 |
+
+### API Route Template
+
+All API routes must start with `force-dynamic`:
+
+```typescript
+export const dynamic = 'force-dynamic';
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from 'db';
+
+export async function GET(req: NextRequest) {
+  // handler
+}
+```
 
 ---
 
@@ -196,5 +207,4 @@ import { hasAccess, assertAccess } from '@karsh/utils/rbac';
 
 - Check `.claude/commands/` for detailed agent documentation
 - Check `.claude/workflows/` for workflow guides
-- Check `.claude/project-context.md` for architecture details
-- Run `/doc-writer` to generate documentation
+- Check `.claude/project-context.md` for full architecture details

@@ -1,111 +1,123 @@
-# Admin App - Claude Context
+# Admin App — Claude Context
 
-Internal admin dashboard for managing content, users, and bookings.
+Super-admin dashboard for managing all products in the Karsh Core Solutions monorepo.
 
 ## Overview
 
 | Property | Value |
-|----------|-------|
+| -------- | ----- |
 | **App** | admin |
 | **Path** | `apps/admin/` |
 | **Port** | 3001 (dev) |
 | **Framework** | Next.js 15 (App Router) |
-| **Auth** | NextAuth.js + GitHub OAuth |
+| **Auth** | NextAuth.js v5 + GitHub OAuth (SUPER_ADMIN gate) |
 
 ## Features
 
-- User management with RBAC
-- Project CRUD operations
-- Booking management
-- Multi-tenant data isolation
-- Session-based authentication
+- Global KPI overview (tenants, bookings, leads, projects)
+- Recharts analytics (monthly bookings, lead funnel, plan distribution)
+- CrowdVibe tenant management (plan, status, site type)
+- CrowdVibe booking management (cross-tenant, status updates)
+- Portfolio project CRUD + blog management
+- Karsh Core lead CRM pipeline
+- ADMIN team member management (invite, deactivate)
+- Dialog-driven CRUD — no separate `/new` or `/edit` pages
 
 ## User Roles
 
 | Role | Permissions |
-|------|-------------|
-| SUPER_ADMIN | Full system access |
-| ADMIN | Tenant admin |
-| MEMBER | Standard access |
-| GUEST | Read-only |
+| ---- | ----------- |
+| SUPER_ADMIN | Full system access — only role that can sign in |
+| ADMIN | Scoped sections assigned by SUPER_ADMIN |
+| MEMBER | Standard CrowdVibe tenant user (not this app) |
+| GUEST | Read-only (not this app) |
 
 ## Commands
 
 ```bash
-# Development
-npm run dev:admin
-
-# Build
+npm run dev:admin      # → http://localhost:3001
 npm run build:admin
-
-# Lint
 npm run lint:admin
 ```
 
 ## Structure
 
-```
+```text
 apps/admin/
 ├── app/
-│   ├── layout.tsx       # Root layout
-│   ├── page.tsx         # Dashboard
-│   ├── globals.css      # Styles
-│   └── api/             # API routes
-│       ├── auth/        # NextAuth
-│       ├── projects/    # Project CRUD
-│       ├── bookings/    # Booking CRUD
-│       └── users/       # User management
-├── components/          # App components
-├── lib/                 # Utilities
-└── public/              # Static assets
+│   ├── (auth)/signin/page.tsx
+│   ├── (dashboard)/
+│   │   ├── layout.tsx           # Sidebar + TopBar + role guard
+│   │   ├── page.tsx             # KPI overview
+│   │   ├── analytics/page.tsx
+│   │   ├── team/page.tsx
+│   │   ├── portfolio/projects/page.tsx
+│   │   ├── portfolio/blog/page.tsx
+│   │   ├── karsh-core/leads/page.tsx
+│   │   ├── karsh-core/blog/page.tsx
+│   │   ├── crowdvibe/tenants/page.tsx
+│   │   ├── crowdvibe/bookings/page.tsx
+│   │   └── crowdvibe/blog/page.tsx
+│   └── api/
+│       ├── auth/[...nextauth]/
+│       ├── projects/[id]/route.ts
+│       ├── posts/[id]/route.ts
+│       ├── crowdvibe/tenants/[id]/route.ts
+│       ├── crowdvibe/bookings/[id]/route.ts
+│       ├── karsh-core/leads/[id]/route.ts
+│       └── team/route.ts
+├── features/            # Dialog components per entity
+├── shared/              # AdminSidebar, AdminTopBar, DataTable, FilterBar
+└── lib/auth.ts
 ```
 
 ## API Routes
 
 | Route | Methods | Auth | Description |
-|-------|---------|------|-------------|
+| ----- | ------- | ---- | ----------- |
 | `/api/auth/*` | Various | Public | NextAuth endpoints |
-| `/api/projects` | GET, POST | Admin+ | Project management |
-| `/api/projects/[id]` | GET, PUT, DELETE | Admin+ | Single project |
-| `/api/bookings` | GET, POST | Admin+ | Booking management |
-| `/api/users` | GET, POST | Super Admin | User management |
+| `/api/projects` | POST | SUPER_ADMIN | Create project |
+| `/api/projects/[id]` | PUT, DELETE | SUPER_ADMIN | Update/delete project |
+| `/api/posts` | POST | SUPER_ADMIN | Create blog post |
+| `/api/posts/[id]` | PUT, DELETE | SUPER_ADMIN | Update/delete post |
+| `/api/crowdvibe/tenants/[id]` | PUT | SUPER_ADMIN | Update plan/status/siteType |
+| `/api/crowdvibe/bookings/[id]` | PUT | SUPER_ADMIN | Update booking status |
+| `/api/karsh-core/leads/[id]` | PUT | SUPER_ADMIN | Update lead status |
+| `/api/team` | POST | SUPER_ADMIN | Invite ADMIN |
+| `/api/team/[id]` | PUT, DELETE | SUPER_ADMIN | Edit/deactivate admin |
 
 ## Dependencies
 
 ```typescript
 // Database
-import { prisma } from '@karsh/db';
+import { prisma } from 'db';
 
 // UI Components
-import { Button, Card } from '@karsh/ui';
+import { Button, Card, Badge, Table, Stat } from 'ui';
 
 // RBAC
-import { hasAccess, assertAccess } from '@karsh/utils/rbac';
+import { hasAccess, assertAccess } from 'utils/rbac';
 ```
 
 ## Authentication Pattern
 
 ```typescript
-import { getServerSession } from 'next-auth';
-import { assertAccess } from '@karsh/utils/rbac';
+import { auth } from '@/lib/auth';
+import { assertAccess } from 'utils/rbac';
+import { Role } from 'db';
 
 export async function GET() {
-  const session = await getServerSession();
-
-  if (!session) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  assertAccess(session.user.role, [Role.ADMIN, Role.SUPER_ADMIN]);
-
-  // Continue with authorized logic
+  const session = await auth();
+  if (!session) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  assertAccess(session.user.role, [Role.SUPER_ADMIN]);
+  // proceed
 }
 ```
 
 ## Environment Variables
 
 ```env
-DATABASE_URL=
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/karsh
 NEXTAUTH_URL=http://localhost:3001
 NEXTAUTH_SECRET=
 GITHUB_ID=

@@ -1,6 +1,6 @@
 # packages/db
 
-Centralised Prisma 6 schema, migrations, and database client for the entire monorepo. Every app that touches PostgreSQL imports from this package.
+Centralised Prisma 7 schema, migrations, and database client for the entire monorepo. Every app that touches PostgreSQL imports from this package.
 
 ## Usage
 
@@ -10,16 +10,21 @@ import { prisma } from 'db';
 const tenants = await prisma.tenant.findMany({ where: { status: 'ACTIVE' } });
 ```
 
-## Important — Always use workspace-pinned Prisma v6
+## How the client is wired
 
-```bash
-# Correct — uses the pinned v6.x from this package's package.json
-npm run db:sync
-npm run --workspace=db generate
+The client uses `@prisma/adapter-pg` (Prisma 7 driver adapter) with a `pg.Pool` for connection pooling. When `DATABASE_URL` is set the pool is used; otherwise it falls back to a bare `PrismaClient()` (safe for build-time imports where no DB is needed).
 
-# Wrong — fetches the latest Prisma (currently v7) which has breaking changes
-npx prisma generate
+```text
+packages/db/
+├── prisma.config.ts    ← URL for CLI tools (migrate, generate, studio)
+├── index.ts            ← Runtime client (pg.Pool + PrismaPg adapter)
+└── lib/prisma.ts       ← Alternative singleton (used by apps that want dev-mode logging)
 ```
+
+The datasource URL is **not** in `schema.prisma` (Prisma 7 requirement). It comes from:
+
+- **CLI tools** → `prisma.config.ts` reads `process.env.DATABASE_URL`
+- **Runtime** → `packages/db/index.ts` creates a `pg.Pool` with `DATABASE_URL`
 
 ## Scripts
 
@@ -30,6 +35,8 @@ npx prisma generate
 | `npm run db:reset` | Reset database and re-seed |
 | `npm run generate` | Generate Prisma client only (no migration) |
 | `npm run seed` | Seed with test data |
+
+Always use workspace scripts — never `npx prisma` which resolves to whichever version `npm` finds globally.
 
 ## Environment Variables
 
@@ -49,12 +56,12 @@ Full schema at [`schema.prisma`](./schema.prisma).
 | `Role` | `SUPER_ADMIN` · `ADMIN` · `MEMBER` · `GUEST` |
 | `TenantPlan` | `FREE` · `STARTER` · `PRO` · `ENTERPRISE` |
 | `TenantStatus` | `ACTIVE` · `SUSPENDED` · `CANCELLED` |
-| `EventType` | `WEDDING` · `CORPORATE` · `CLUB_NIGHT` · `FESTIVAL` · `BIRTHDAY` · `CONCERT` · `PRIVATE_PARTY` · `OTHER` |
-| `BookingStatus` | `PENDING` · `QUOTE_SENT` · `CONFIRMED` · `DEPOSIT_PAID` · `PAID` · `CANCELLED` · `COMPLETED` |
-| `ServiceType` | `DJ_SET` · `MC_HOST` · `SOUND_SYSTEM` · `LIGHTING` · `PHOTO_BOOTH` · `LIVE_BAND` · `OTHER` |
-| `MediaType` | `MIX` · `TRACK` · `VIDEO` · `PHOTO` · `PODCAST` |
+| `EventType` | `WEDDING` · `CORPORATE` · `BIRTHDAY` · `CLUB_NIGHT` · `FESTIVAL` · `CAMPUS_EVENT` · `PRIVATE_PARTY` · `FULL_PACKAGE` |
+| `BookingStatus` | `PENDING` · `QUOTE_SENT` · `CONFIRMED` · `DEPOSIT_PAID` · `COMPLETED` · `CANCELLED` |
+| `ServiceType` | `DJ` · `MC_HOST` · `LIGHTING` · `SOUND_SYSTEM` · `PHOTO_BOOTH` |
+| `MediaType` | `MIX` · `PODCAST` · `LIVE_SET` · `PROMO_VIDEO` · `PHOTO` |
 | `LeadStatus` | `NEW` · `CONTACTED` · `PROPOSAL_SENT` · `NEGOTIATION` · `WON` · `LOST` |
-| `SubscriptionStatus` | `TRIALING` · `ACTIVE` · `PAST_DUE` · `CANCELLED` · `UNPAID` |
+| `SubscriptionStatus` | `TRIALING` · `ACTIVE` · `PAST_DUE` · `CANCELLED` |
 
 ### Core Models
 
@@ -62,7 +69,7 @@ Full schema at [`schema.prisma`](./schema.prisma).
 
 The central multi-tenancy unit. Each entertainer who subscribes to CrowdVibe gets one `Tenant` record.
 
-Key fields: `slug` (URL identifier), `customDomain`, `brandColor`, `accentColor`, `logoUrl`, `heroImageUrl`, `bio`, `location`, `plan`, `status`, social links (`instagramUrl`, `tiktokUrl`, `youtubeUrl`, `audiomackUrl`, `soundcloudUrl`).
+Key fields: `slug` (URL identifier), `customDomain`, `brandColor`, `accentColor`, `logoUrl`, `heroImageUrl`, `bio`, `location`, `plan`, `status`, social links (`instagramUrl`, `tiktokUrl`, `youtubeUrl`, `audiomackUrl`, `soundcloudUrl`, `spotifyUrl`), Google Calendar fields (`googleAccessToken`, `googleRefreshToken`, `googleCalendarId`).
 
 #### User
 
@@ -74,13 +81,25 @@ Key fields: `email`, `role`, `tenantId?`.
 
 A booking request against a tenant. Full event details including payment tracking.
 
-Key fields: `tenantId`, `clientName`, `clientEmail`, `clientPhone`, `eventType`, `eventDate`, `startTime`, `endTime`, `venue`, `venueAddress`, `guestCount`, `services[]`, `basePrice`, `totalPrice`, `depositAmount`, `depositPaid`, `paystackRef`, `stripePaymentId`, `status`, `adminNotes`.
+Key fields: `tenantId`, `clientName`, `clientEmail`, `clientPhone`, `eventType`, `eventDate`, `startTime`, `endTime`, `venue`, `venueAddress`, `guestCount`, `services[]`, `basePrice`, `totalPrice`, `depositAmount`, `depositPaid`, `paystackRef`, `stripePaymentId`, `status`, `adminNotes`, `googleCalendarEventId`, `invoiceUrl`.
 
 #### MediaAsset
 
 Audio, video, and photo assets uploaded to Cloudinary by a tenant.
 
 Key fields: `tenantId`, `title`, `type` (MediaType), `url`, `thumbnailUrl`, `duration`, `featured`.
+
+#### Event
+
+Upcoming gigs published by a tenant — fans can view/RSVP.
+
+Key fields: `tenantId`, `title`, `venue`, `city`, `eventDate`, `startTime`, `ticketUrl`, `published`, `featured`.
+
+#### NewsletterSubscriber
+
+Subscribers per-tenant (or platform-wide when `tenantId` is null).
+
+Key fields: `email`, `name`, `tenantId?`.
 
 #### Lead
 
@@ -96,9 +115,9 @@ Key fields: `tenantId`, `plan`, `status`, `stripeSubscriptionId`, `stripeCustome
 
 #### Project
 
-Portfolio project managed via the admin dashboard and displayed on `kasope.dev`.
+Portfolio project managed via the admin dashboard.
 
-Key fields: `title`, `slug`, `description`, `featuredImg`, `tags[]`, `liveUrl`, `repoUrl`, `published`.
+Key fields: `title`, `slug`, `description`, `featuredImg`, `tags[]`, `published`.
 
 #### NextAuth Models
 
@@ -108,11 +127,12 @@ Key fields: `title`, `slug`, `description`, `featuredImg`, `tags[]`, `liveUrl`, 
 
 ```text
 packages/db/
+├── prisma.config.ts    # Datasource URL config for Prisma CLI tools
 ├── schema.prisma       # Full multi-tenant SaaS schema
 ├── migrations/         # Prisma migration history
 ├── lib/
-│   └── prisma.ts       # Singleton Prisma client
-├── index.ts            # Package exports (re-exports prisma + PrismaClient)
+│   └── prisma.ts       # Singleton Prisma client (with dev logging)
+├── index.ts            # Package exports (pg adapter client + re-exports)
 ├── seed.ts             # Test data seeder
 └── package.json
 ```
@@ -120,8 +140,10 @@ packages/db/
 ## Creating a Migration
 
 ```bash
-# From the monorepo root — do NOT cd into packages/db
-npm run --workspace=db migrate -- --name your_migration_name
+# From the monorepo root
+npm run db:sync
+# Or explicitly:
+npm run --workspace=db sync -- --name your_migration_name
 ```
 
 ## Related

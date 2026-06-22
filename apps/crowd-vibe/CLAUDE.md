@@ -1,162 +1,205 @@
-# DJ Karsh App - Claude Context
+# CrowdVibe — Claude Context
 
-Entertainment booking platform and portfolio for DJ Karsh.
+Multi-tenant SaaS entertainment booking platform under Karsh Core Solutions.
 
 ## Overview
 
 | Property | Value |
-|----------|-------|
-| **App** | dj-karsh |
-| **Path** | `apps/dj-karsh/` |
+| -------- | ----- |
+| **App** | crowd-vibe |
+| **Path** | `apps/crowd-vibe/` |
 | **Port** | 3003 (dev) |
+| **URL** | crowdvibe.io |
 | **Framework** | Next.js 15 (App Router) |
-| **Auth** | Optional (for booking status) |
+| **Auth** | NextAuth v5 + GitHub OAuth |
+
+## Architecture
+
+CrowdVibe is multi-tenant: each entertainer (DJ, MC, event host) who subscribes gets a fully branded public booking site at their own custom domain, powered by Vercel Edge Middleware.
+
+```text
+Request: djrandyuniverse.com
+  → middleware.ts (Edge): domain lookup → rewrite to /site/dj-randy/
+  → app/site/[slug]/page.tsx: render PersonalSite / PortfolioSite / CorporateSite
+```
+
+## Site Types
+
+Tenants choose a site type during onboarding:
+
+| Type | Template | Notes |
+| ---- | -------- | ----- |
+| `PERSONAL` | `PersonalSite` | DJ/MC/entertainer (default) |
+| `PORTFOLIO` | `PortfolioSite` | Professional portfolio |
+| `CORPORATE` | `CorporateSite` | Business site; contact form → Lead |
+| `REDIRECT` | — | Middleware 301 to `tenant.redirectUrl` |
 
 ## Features
 
-- Event booking system
-- Media gallery
-- 3D interactive homepage (planned)
-- Blog and news
-- Contact forms
-- Cloudinary media uploads
-
-## Planned Technologies
-
-| Tech | Purpose |
-|------|---------|
-| React Three Fiber | 3D graphics |
-| Drei | R3F helpers |
-| Framer Motion | Animations |
-| Cloudinary | Media storage |
+- Multi-tenant domain routing (custom domains + subdomains)
+- 5-step booking wizard with Paystack (₦) + Stripe (international)
+- Tenant dashboard: bookings, media library, events, settings, billing, analytics
+- Google Calendar integration (sync confirmed bookings)
+- Cloudinary media uploads with Wavesurfer.js waveform players
+- Digital EPK (`/press`) + events page (`/events`) + gallery
+- Newsletter subscriber management
+- PDF invoice generation via `@react-pdf/renderer`
+- Stripe Customer Portal for subscription management
+- Per-tenant CSS variables (`--cv-brand`, `--cv-accent`) — full white-label
 
 ## Commands
 
 ```bash
-# Development
-npm run dev:dj-karsh
-
-# Build
-npm run build:dj-karsh
-
-# Lint
-npm run lint:dj-karsh
+npm run dev:crowd-vibe    # → http://localhost:3003
+npm run build:crowd-vibe
+npm run lint:crowd-vibe
 ```
 
 ## Structure
 
-```
-apps/dj-karsh/
+```text
+apps/crowd-vibe/
 ├── app/
-│   ├── layout.tsx       # Root layout
-│   ├── page.tsx         # Home (3D scene)
-│   ├── globals.css      # Styles
-│   ├── bookings/        # Booking flow
-│   │   ├── page.tsx     # Booking form
-│   │   └── [id]/        # Booking confirmation
-│   ├── gallery/         # Media gallery
-│   ├── blog/            # Blog pages
-│   ├── about/           # About DJ Karsh
-│   └── contact/         # Contact form
-├── components/
-│   ├── 3d/              # Three.js components
-│   └── ui/              # UI components
-├── lib/                 # Utilities
-└── public/              # Static assets
+│   ├── (platform)/                  # SaaS marketing (public)
+│   │   ├── page.tsx                 # Landing page
+│   │   └── pricing/page.tsx
+│   ├── (auth)/                      # Sign in / sign up
+│   ├── (dashboard)/                 # Protected tenant dashboard
+│   │   ├── layout.tsx               # Sidebar + auth guard
+│   │   ├── dashboard/page.tsx       # KPI overview
+│   │   ├── bookings/page.tsx
+│   │   ├── media/page.tsx
+│   │   ├── events/page.tsx
+│   │   ├── settings/page.tsx
+│   │   └── billing/page.tsx
+│   ├── site/[slug]/                 # Public per-tenant sites
+│   │   ├── layout.tsx               # Brand CSS vars + metadata
+│   │   ├── page.tsx                 # Template router (PERSONAL/PORTFOLIO/CORPORATE)
+│   │   ├── book/page.tsx            # 5-step booking wizard
+│   │   ├── gallery/page.tsx
+│   │   ├── events/page.tsx
+│   │   └── press/page.tsx
+│   ├── api/
+│   │   ├── bookings/route.ts
+│   │   ├── bookings/[id]/route.ts
+│   │   ├── availability/route.ts
+│   │   ├── media/route.ts
+│   │   ├── media/[id]/route.ts
+│   │   ├── events/route.ts
+│   │   ├── events/[id]/route.ts
+│   │   ├── newsletter/route.ts
+│   │   ├── newsletter/subscribe/route.ts
+│   │   ├── onboarding/route.ts
+│   │   ├── payments/paystack/route.ts
+│   │   ├── payments/stripe/route.ts
+│   │   ├── billing/portal/route.ts
+│   │   ├── billing/checkout/route.ts
+│   │   ├── tenants/route.ts
+│   │   ├── tenants/by-domain/route.ts
+│   │   ├── auth/[...nextauth]/route.ts
+│   │   ├── auth/google-calendar/route.ts
+│   │   ├── auth/google-calendar/callback/route.ts
+│   │   └── webhooks/stripe/route.ts
+│   ├── sitemap.ts
+│   ├── robots.ts
+│   └── globals.css                  # CrowdVibe design tokens
+├── features/
+│   ├── bookings/
+│   │   ├── components/
+│   │   │   ├── BookingTable.tsx
+│   │   │   └── steps/               # ContactStep, DetailsStep, EventTypeStep, ...
+│   │   └── types.ts
+│   ├── events/
+│   │   └── components/EventForm.tsx
+│   ├── invoices/
+│   │   ├── api.ts                   # generateInvoicePdf (react-pdf)
+│   │   └── InvoiceDocument.tsx
+│   └── tenants/
+│       ├── components/
+│       │   ├── TenantSettingsForm.tsx
+│       │   └── site/
+│       │       ├── personal/        # PersonalSite template
+│       │       ├── portfolio/       # PortfolioSite template
+│       │       └── corporate/       # CorporateSite template
+│       └── site/
+│           ├── HeroSection.tsx
+│           ├── ServicesSection.tsx
+│           ├── FeaturedMixes.tsx
+│           └── ...
+├── shared/
+│   └── lib/
+│       ├── auth.ts                  # NextAuth v5 config
+│       ├── stripe.ts                # Lazy Proxy singleton
+│       ├── resend.ts                # Lazy Proxy singleton
+│       └── prisma.ts                # Thin re-export from 'db'
+├── middleware.ts                    # Edge: custom domains + subdomains → /site/[slug]/
+└── package.json
 ```
 
-## Pages
+## Important Patterns
 
-| Route | Description | Type |
-|-------|-------------|------|
-| `/` | 3D interactive home | Dynamic |
-| `/bookings` | Booking form | Dynamic |
-| `/bookings/[id]` | Confirmation | Dynamic |
-| `/gallery` | Media gallery | Dynamic |
-| `/blog` | Blog listing | Dynamic |
-| `/blog/[slug]` | Blog post | Dynamic |
-| `/about` | About page | Static |
-| `/contact` | Contact form | Dynamic |
+All API routes must include `export const dynamic = 'force-dynamic'` (prevents build-time DB access).
 
-## Booking System
-
-### Flow
-
-```
-1. User selects date/event type
-2. User fills event details
-3. System validates availability
-4. Booking created (pending)
-5. Confirmation email sent
-6. Admin reviews in admin app
-7. Booking confirmed/rejected
-```
-
-### Booking Schema
-
-```typescript
-interface Booking {
-  id: string;
-  eventDate: Date;
-  clientName: string;
-  clientEmail: string;
-  eventType: string;
-  venue: string;
-  status: 'pending' | 'confirmed' | 'rejected';
-  notes?: string;
-}
-```
+Stripe and Resend use lazy Proxy singletons — they are not initialised at module load time, only on first call. This prevents build failures when API keys are not set.
 
 ## Dependencies
 
 ```typescript
 // Database
-import { prisma } from '@karsh/db';
+import { prisma } from 'db';
 
 // UI Components
-import { Button, Card, Form } from '@karsh/ui';
+import { Button, Card, Badge } from 'ui';
 
-// 3D (planned)
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Environment } from '@react-three/drei';
+// Validation
+import { BookingCreateSchema, TenantSettingsSchema } from 'utils/validation';
 ```
 
-## 3D Scene Pattern (Planned)
+## API Routes
 
-```typescript
-'use client';
-
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Environment } from '@react-three/drei';
-
-export function Scene() {
-  return (
-    <Canvas>
-      <OrbitControls />
-      <Environment preset="city" />
-      <ambientLight intensity={0.5} />
-      {/* 3D content */}
-    </Canvas>
-  );
-}
-```
+| Route | Methods | Description |
+| ----- | ------- | ----------- |
+| `/api/bookings` | GET, POST | Booking list + public creation |
+| `/api/bookings/[id]` | GET, PATCH, DELETE | Single booking management |
+| `/api/availability` | GET | Booked dates for calendar blocking |
+| `/api/media` | GET, POST | Media list + Cloudinary upload |
+| `/api/media/[id]` | PATCH, DELETE | Update/delete media asset |
+| `/api/events` | GET, POST | Events list + creation |
+| `/api/events/[id]` | PATCH, DELETE | Update/delete event |
+| `/api/newsletter/subscribe` | POST | Subscribe to tenant newsletter |
+| `/api/onboarding` | POST | Create tenant + user atomically |
+| `/api/payments/paystack` | POST | Initialise Paystack transaction |
+| `/api/payments/stripe` | POST | Create Stripe PaymentIntent |
+| `/api/billing/portal` | POST | Stripe billing portal redirect |
+| `/api/billing/checkout` | POST | Stripe checkout session |
+| `/api/tenants` | PATCH | Update tenant settings |
+| `/api/tenants/by-domain` | GET | Domain → slug lookup (middleware) |
+| `/api/auth/google-calendar` | GET | Initiate Google OAuth for calendar |
+| `/api/webhooks/stripe` | POST | Stripe subscription lifecycle |
 
 ## Environment Variables
 
 ```env
-DATABASE_URL=
-CLOUDINARY_URL=
+NEXTAUTH_URL=http://localhost:3003
+NEXTAUTH_SECRET=
+GITHUB_ID=
+GITHUB_SECRET=
+PAYSTACK_SECRET_KEY=
+PAYSTACK_PUBLIC_KEY=
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+RESEND_API_KEY=
+NEXT_PUBLIC_APP_URL=https://crowdvibe.io
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
 ```
-
-## Performance Considerations
-
-- Lazy load 3D components
-- Use Suspense boundaries
-- Optimize textures/models
-- Progressive loading
 
 ## Related
 
 - [Root CLAUDE.md](../../CLAUDE.md)
-- [Admin Dashboard](../admin/) - Booking management
+- [Admin Dashboard](../admin/) — manages all CrowdVibe tenants
 - [Database Package](../../packages/db/)

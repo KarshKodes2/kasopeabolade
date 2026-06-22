@@ -13,7 +13,7 @@ A full-stack Next.js monorepo powering four production products under the **Kars
 
 ## Architecture
 
-```
+```text
 kasopeabolade/
 ├── apps/
 │   ├── crowd-vibe/     # CrowdVibe SaaS platform (multi-tenant)
@@ -21,7 +21,7 @@ kasopeabolade/
 │   ├── portfolio/      # Public developer portfolio
 │   └── karsh-core/     # Corporate site + CRM lead capture
 ├── packages/
-│   ├── db/             # Prisma 6 schema + PostgreSQL client
+│   ├── db/             # Prisma 7 schema + pg driver adapter client
 │   ├── ui/             # Shared component library (9 components)
 │   └── utils/          # RBAC, Zod schemas, tenant helpers
 ├── scripts/            # Database and setup scripts
@@ -37,7 +37,7 @@ kasopeabolade/
 | Framework | Next.js 15 (App Router), React 19 |
 | Language | TypeScript 5 (strict) |
 | Styling | Tailwind CSS 4 |
-| Database | PostgreSQL 15 + Prisma 6 |
+| Database | PostgreSQL 15 + Prisma 7 + `@prisma/adapter-pg` |
 | Auth | NextAuth.js v5 (GitHub OAuth + email magic link) |
 | Build | Turbo 2.5 + npm workspaces |
 | Payments | Paystack (₦ Nigeria/Africa) + Stripe (international) |
@@ -45,7 +45,7 @@ kasopeabolade/
 | Email | Resend (transactional emails) |
 | Animation | Framer Motion 12 |
 | Audio | Wavesurfer.js 7 (waveform players) |
-| Validation | Zod 3 + React Hook Form |
+| Validation | Zod 4 + React Hook Form |
 | State | Zustand 5 (booking wizard) |
 | Testing | Playwright (E2E) |
 
@@ -72,7 +72,6 @@ npm install
 npm run start:db
 
 # Run migrations and generate Prisma client
-# IMPORTANT: always use this, never npx prisma (fetches v7)
 npm run db:sync
 
 # Seed with test data (optional)
@@ -128,6 +127,13 @@ GITHUB_SECRET=
 DATABASE_URL=  # same as packages/db/.env
 ```
 
+### `apps/karsh-core/.env.local`
+
+```env
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/karsh
+RESEND_API_KEY=
+```
+
 ## Scripts Reference
 
 ### Dev scripts
@@ -175,7 +181,7 @@ CrowdVibe is the flagship product. Entertainers subscribe and get a fully brande
 
 ### How domain routing works
 
-```
+```text
 djrandyuniverse.com  ──────┐
 dj-randy.crowdvibe.io ─────┤──▶  middleware.ts (Edge)  ──▶  /site/dj-randy/...
                            │         ↓
@@ -186,28 +192,41 @@ The URL shown to visitors never changes — `djrandyuniverse.com` stays in the b
 
 ### Tenant public site structure
 
-```
-/site/[slug]/           ← Landing page (hero, services, mixes, gallery)
+```text
+/site/[slug]/           ← Landing page (hero, services, mixes)
 /site/[slug]/book       ← 5-step booking wizard (Paystack/Stripe payment)
 /site/[slug]/gallery    ← Full media gallery + waveform players
-/site/[slug]/press      ← Digital EPK
+/site/[slug]/events     ← Upcoming events / gigs
+/site/[slug]/press      ← Digital EPK (Electronic Press Kit)
 ```
+
+### Multi-type tenant sites
+
+Tenants choose a site type on onboarding:
+
+| Type | Template | Description |
+| ---- | -------- | ----------- |
+| `PERSONAL` | `PersonalSite` | DJ/MC/entertainer template (default) |
+| `PORTFOLIO` | `PortfolioSite` | Professional portfolio with projects |
+| `CORPORATE` | `CorporateSite` | Business/company site with contact form → Lead |
+| `REDIRECT` | — | Middleware 301 redirects to `tenant.redirectUrl` |
 
 ## Database Schema
 
 The full multi-tenant SaaS schema lives in [`packages/db/schema.prisma`](./packages/db/schema.prisma).
 
-**Key models:** `Tenant`, `User`, `Booking`, `MediaAsset`, `Lead`, `Subscription`, `Project`
+**Key models:** `Tenant`, `User`, `Booking`, `MediaAsset`, `Event`, `NewsletterSubscriber`, `Lead`, `Subscription`, `Project`
 
 **Enums:** `Role`, `TenantPlan` (FREE/STARTER/PRO/ENTERPRISE), `TenantStatus`, `EventType`, `BookingStatus`, `ServiceType`, `MediaType`, `LeadStatus`, `SubscriptionStatus`
 
 ## Architecture Rules
 
 1. Apps import only from `packages/*` — never from each other
-2. All DB access goes through `packages/db`
-3. Shared UI lives in `packages/ui`
-4. Shared logic (RBAC, validation, tenant helpers) lives in `packages/utils`
-5. Always use workspace-pinned Prisma v6: `npm run --workspace=db generate` — never `npx prisma generate`
+2. All DB access goes through `packages/db` (import path: `'db'`)
+3. Shared UI lives in `packages/ui` (import path: `'ui'`)
+4. Shared logic (RBAC, validation, tenant helpers) lives in `packages/utils` (import path: `'utils/rbac'` etc.)
+5. Always use workspace-pinned Prisma v7: `npm run --workspace=db generate` — never `npx prisma generate`
+6. All API routes must export `export const dynamic = 'force-dynamic'` to prevent build-time DB access
 
 ## Deployment
 
@@ -233,7 +252,7 @@ GitHub Actions workflows in `.github/workflows/`:
 
 | Package | Purpose | Docs |
 | ------- | ------- | ---- |
-| [db](./packages/db/) | Prisma schema, client, migrations | [README](./packages/db/README.md) |
+| [db](./packages/db/) | Prisma 7 schema, pg adapter client, migrations | [README](./packages/db/README.md) |
 | [ui](./packages/ui/) | Button, Card, Badge, Modal, Table, Stat, Avatar, Input, Select | [README](./packages/ui/README.md) |
 | [utils](./packages/utils/) | RBAC, Zod validation schemas, tenant query helpers | [README](./packages/utils/README.md) |
 
