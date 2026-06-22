@@ -3,18 +3,21 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev --turbopack --port 3004",
     "build": "next build",
-    "start": "next start",
+    "start": "next start --port 3004",
     "lint": "next lint",
-    "seed": "tsx packages/db/testData.ts",
-    "install": "echo '✅ Karsh Core site: Setup ready. Use markdown or CMS integration if needed.'",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "db": "*",
+    "framer-motion": "^12.15.0",
+    "lucide-react": "^1.21.0",
     "next": "15.3.5",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "sonner": "^2.0.7",
+    "utils": "*"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -24,8 +27,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.3.5",
-    "tailwindcss": "^4.1.11",
-    "tsx": "^4.20.3",
+    "tailwindcss": "^4",
     "typescript": "^5"
   }
 }

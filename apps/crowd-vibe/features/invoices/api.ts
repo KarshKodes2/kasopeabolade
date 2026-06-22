@@ -1,10 +1,10 @@
-import { renderToBuffer } from '@react-pdf/renderer';
-import { createElement } from 'react';
+import { renderToBuffer, type DocumentProps } from '@react-pdf/renderer';
+import { createElement, type JSXElementConstructor, type ReactElement } from 'react';
 import { InvoiceDocument } from './components/InvoiceDocument';
 import type { InvoiceData } from './types';
 
 export async function generateInvoicePdf(data: InvoiceData): Promise<Buffer> {
-  const element = createElement(InvoiceDocument, { data });
+  const element = createElement(InvoiceDocument, { data }) as unknown as ReactElement<DocumentProps, JSXElementConstructor<DocumentProps>>;
   return renderToBuffer(element) as Promise<Buffer>;
 }
 

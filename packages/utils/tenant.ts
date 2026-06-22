@@ -13,7 +13,7 @@ export async function getTenantWithMedia(slug: string) {
     where: { slug },
     include: {
       mediaAssets: {
-        where: { type: { in: ['MIX', 'TRACK', 'VIDEO', 'PHOTO'] } },
+        where: { type: { in: ['MIX', 'PODCAST', 'LIVE_SET', 'PROMO_VIDEO', 'PHOTO'] } },
         orderBy: [{ featured: 'desc' }, { publishedAt: 'desc' }],
         take: 20,
       },
@@ -25,7 +25,7 @@ export async function getBookedDates(tenantId: string): Promise<string[]> {
   const bookings = await prisma.booking.findMany({
     where: {
       tenantId,
-      status: { in: ['CONFIRMED', 'DEPOSIT_PAID', 'PAID'] },
+      status: { in: ['CONFIRMED', 'DEPOSIT_PAID', 'COMPLETED'] },
       eventDate: { gte: new Date() },
     },
     select: { eventDate: true },

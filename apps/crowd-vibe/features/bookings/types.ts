@@ -1,4 +1,4 @@
-export type EventType = 'WEDDING' | 'BIRTHDAY' | 'CORPORATE' | 'CLUB_NIGHT' | 'FESTIVAL' | 'OTHER';
+export type EventType = 'WEDDING' | 'BIRTHDAY' | 'CORPORATE' | 'CLUB_NIGHT' | 'FESTIVAL' | 'CAMPUS_EVENT' | 'PRIVATE_PARTY' | 'FULL_PACKAGE';
 export type BookingStatus = 'PENDING' | 'QUOTE_SENT' | 'CONFIRMED' | 'DEPOSIT_PAID' | 'COMPLETED' | 'CANCELLED';
 export type ServiceType = 'DJ' | 'MC_HOST' | 'LIGHTING' | 'SOUND_SYSTEM' | 'PHOTO_BOOTH';
 

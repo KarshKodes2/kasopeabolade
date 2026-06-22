@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useBookingWizardStore } from '../store/booking-wizard.store';
 import { useCreateBooking } from '../hooks/useCreateBooking';
+import type { EventType } from '../types';
 import { EventTypeStep } from './steps/EventTypeStep';
 import { DateTimeStep } from './steps/DateTimeStep';
 import { DetailsStep } from './steps/DetailsStep';
@@ -73,7 +74,7 @@ export function BookingWizard({ tenantId, tenantName, tenantSlug, bookedDates, i
         {step === 0 && (
           <EventTypeStep
             value={formData.eventType ?? (initialEventType as typeof formData.eventType) ?? ''}
-            onChange={(v) => updateForm({ eventType: v })}
+            onChange={(v) => updateForm({ eventType: v as EventType })}
             onNext={nextStep}
           />
         )}

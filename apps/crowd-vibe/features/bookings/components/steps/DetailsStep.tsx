@@ -1,6 +1,6 @@
 'use client';
 
-import type { BookingFormData } from '../../types';
+import type { BookingFormData, ServiceType } from '../../types';
 
 const SERVICES = [
   { value: 'DJ', label: 'DJ Performance' },
@@ -20,7 +20,10 @@ interface Props {
 export function DetailsStep({ value, onChange, onNext, onBack }: Props) {
   const toggleService = (svc: string) => {
     const current = value.services ?? [];
-    onChange({ services: current.includes(svc) ? current.filter((s) => s !== svc) : [...current, svc] });
+    const next = current.includes(svc as ServiceType)
+      ? current.filter((s) => s !== svc)
+      : [...current, svc as ServiceType];
+    onChange({ services: next });
   };
 
   return (
@@ -57,7 +60,7 @@ export function DetailsStep({ value, onChange, onNext, onBack }: Props) {
         <input
           type="number"
           value={value.guestCount ?? ''}
-          onChange={(e) => onChange({ guestCount: e.target.value })}
+          onChange={(e) => onChange({ guestCount: e.target.value ? Number(e.target.value) : undefined })}
           placeholder="e.g. 200"
           className="w-full rounded-lg border px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--cv-brand)]"
           style={{ background: 'var(--cv-elevated)', borderColor: 'var(--cv-border)' }}
@@ -68,7 +71,7 @@ export function DetailsStep({ value, onChange, onNext, onBack }: Props) {
         <label className="mb-3 block text-sm font-medium text-white/80">Services needed</label>
         <div className="flex flex-wrap gap-2">
           {SERVICES.map((svc) => {
-            const active = (value.services ?? []).includes(svc.value);
+            const active = (value.services ?? []).includes(svc.value as ServiceType);
             return (
               <button
                 key={svc.value}

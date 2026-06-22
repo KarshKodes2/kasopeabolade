@@ -1,6 +1,18 @@
 import { Resend } from 'resend';
 
-export const resend = new Resend(process.env.RESEND_API_KEY);
+let _resend: Resend | undefined;
+function getInstance(): Resend {
+  _resend ??= new Resend(process.env.RESEND_API_KEY!);
+  return _resend;
+}
+
+export const resend: Resend = new Proxy({} as Resend, {
+  get(_target, prop: string | symbol) {
+    const client = getInstance();
+    const val = (client as unknown as Record<string | symbol, unknown>)[prop];
+    return typeof val === 'function' ? (val as Function).bind(client) : val;
+  },
+});
 
 const FROM = 'CrowdVibe <bookings@crowdvibe.io>';
 

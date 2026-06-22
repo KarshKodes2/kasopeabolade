@@ -1,9 +1,9 @@
-import { auth } from '@/shared/lib/auth';
-import { prisma } from 'db';
-import Stripe from 'stripe';
-import { redirect } from 'next/navigation';
+export const dynamic = 'force-dynamic';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+import { auth } from '@/shared/lib/auth';
+import { prisma } from '@/shared/lib/prisma';
+import { stripe } from '@/shared/lib/stripe';
+import { redirect } from 'next/navigation';
 
 export async function POST() {
   const session = await auth();

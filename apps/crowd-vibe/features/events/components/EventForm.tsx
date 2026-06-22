@@ -9,7 +9,7 @@ interface Props {
   onCancel: () => void;
 }
 
-const FIELD_CONFIG = [
+const FIELD_CONFIG: { key: string; label: string; type: string; required?: boolean; placeholder?: string }[] = [
   { key: 'title', label: 'Event title', type: 'text', required: true, placeholder: 'e.g. DJ Karsh Live @ Club XYZ' },
   { key: 'venue', label: 'Venue', type: 'text', required: true, placeholder: 'Club XYZ' },
   { key: 'city', label: 'City', type: 'text', placeholder: 'Lagos' },
@@ -18,7 +18,7 @@ const FIELD_CONFIG = [
   { key: 'endTime', label: 'End time', type: 'time' },
   { key: 'ticketUrl', label: 'Ticket link', type: 'url', placeholder: 'https://...' },
   { key: 'imageUrl', label: 'Event image URL', type: 'url', placeholder: 'https://...' },
-] as const;
+];
 
 export function EventForm({ initial, onSave, onCancel }: Props) {
   const [form, setForm] = useState<Partial<EventFormData>>({
@@ -56,7 +56,7 @@ export function EventForm({ initial, onSave, onCancel }: Props) {
             required={required}
             value={(form[key as keyof EventFormData] as string) ?? ''}
             onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
-            placeholder={'placeholder' in { placeholder } ? placeholder : undefined}
+            placeholder={placeholder}
             className="w-full rounded-lg border px-4 py-2.5 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-[var(--cv-brand)]"
             style={{ background: 'var(--cv-elevated)', borderColor: 'var(--cv-border)' }}
           />

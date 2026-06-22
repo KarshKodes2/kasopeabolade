@@ -78,7 +78,7 @@ export default async function PressPage({ params }: Props) {
             <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
               {tenant.logoUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={tenant.logoUrl} alt={tenant.name} className="h-24 w-24 shrink-0 rounded-2xl object-cover ring-2" style={{ ringColor: 'var(--cv-brand)' }} />
+                <img src={tenant.logoUrl} alt={tenant.name} className="h-24 w-24 shrink-0 rounded-2xl object-cover ring-2 ring-(--cv-brand)" />
               )}
               <div>
                 <h1 className="text-4xl font-black text-white md:text-6xl">{tenant.name}</h1>

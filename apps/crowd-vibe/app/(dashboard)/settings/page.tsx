@@ -15,16 +15,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   const { calendar } = await searchParams;
 
   const tenant = tenantId
-    ? await prisma.tenant.findUnique({
-        where: { id: tenantId },
-        select: {
-          id: true, name: true, slug: true, bio: true, location: true,
-          brandColor: true, accentColor: true, logoUrl: true, heroImageUrl: true,
-          instagramUrl: true, tiktokUrl: true, youtubeUrl: true,
-          audiomackUrl: true, soundcloudUrl: true, spotifyUrl: true,
-          customDomain: true, googleCalendarId: true,
-        },
-      })
+    ? await prisma.tenant.findUnique({ where: { id: tenantId } })
     : null;
 
   const calendarConnected = !!tenant?.googleCalendarId;
