@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { auth } from '@/shared/lib/auth';
 import { prisma } from 'db';
 

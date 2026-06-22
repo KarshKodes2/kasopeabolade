@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/shared/lib/stripe';
 import { prisma } from '@/shared/lib/prisma';

@@ -1,23 +1,20 @@
 import { PrismaClient } from '@prisma/client';
 
 declare global {
-  // Prevent multiple instances in dev
   var prisma: PrismaClient | undefined;
 }
 
-export const prisma =
-  global.prisma ||
-  new PrismaClient({
-    log: ['query', 'error', 'warn'],
-  });
-
-if (process.env.NODE_ENV !== 'production') global.prisma = prisma;
-
-// Example: inject tenantId automatically if needed
-prisma.$use(async (params: { model: string; }, next: (arg0: any) => any) => {
-  if (params.model && ['Project', 'Booking'].includes(params.model)) {
-    // attach currentTenantId (you’ll fetch this per user session)
+function getClient(): PrismaClient {
+  if (!global.prisma) {
+    global.prisma = new PrismaClient({
+      log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+    });
   }
-  return next(params);
-});
+  return global.prisma;
+}
 
+export const prisma: PrismaClient = new Proxy({} as PrismaClient, {
+  get(_target, prop) {
+    return (getClient() as unknown as Record<string | symbol, unknown>)[prop];
+  },
+});
