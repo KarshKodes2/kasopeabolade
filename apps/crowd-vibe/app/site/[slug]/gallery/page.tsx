@@ -49,7 +49,7 @@ export default async function GalleryPage({ params }: Props) {
         {/* Video section */}
         {videos.length > 0 && (
           <section className="mx-auto max-w-6xl px-6 pb-16">
-            <h2 className="mb-6 text-lg font-semibold text-white/60 uppercase tracking-widest text-sm">Videos</h2>
+            <h2 className="mb-6 text-sm font-semibold text-white/60 uppercase tracking-widest">Videos</h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {videos.map((v) => (
                 <div key={v.id} className="group relative aspect-video overflow-hidden rounded-2xl border" style={{ borderColor: 'var(--cv-border)', background: 'var(--cv-surface)' }}>
@@ -68,7 +68,7 @@ export default async function GalleryPage({ params }: Props) {
                       ▶
                     </a>
                   </div>
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 p-4 translate-y-full transition-transform group-hover:translate-y-0">
+                  <div className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/80 p-4 translate-y-full transition-transform group-hover:translate-y-0">
                     <p className="text-sm font-medium text-white">{v.title}</p>
                   </div>
                 </div>
