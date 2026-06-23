@@ -3,33 +3,31 @@ import { redirect } from 'next/navigation';
 import { auth } from '../../lib/auth';
 
 const NAV = [
-  { section: 'Overview', items: [{ href: '/dashboard', label: 'Home', icon: '📊' }] },
+  { section: 'Overview', items: [{ href: '/', label: 'Home', icon: '📊' }] },
   {
     section: 'CrowdVibe',
     items: [
-      { href: '/dashboard/crowdvibe', label: 'Overview', icon: '🎵' },
-      { href: '/dashboard/crowdvibe/tenants', label: 'Tenants', icon: '👥' },
-      { href: '/dashboard/crowdvibe/bookings', label: 'All Bookings', icon: '📅' },
+      { href: '/crowdvibe/tenants', label: 'Tenants', icon: '👥' },
+      { href: '/crowdvibe/bookings', label: 'All Bookings', icon: '📅' },
     ],
   },
   {
     section: 'Portfolio',
     items: [
-      { href: '/dashboard/portfolio/projects', label: 'Projects', icon: '🗂️' },
+      { href: '/portfolio/projects', label: 'Projects', icon: '🗂️' },
     ],
   },
   {
     section: 'Karsh Core',
     items: [
-      { href: '/dashboard/karsh-core/leads', label: 'Leads', icon: '💼' },
+      { href: '/karsh-core/leads', label: 'Leads', icon: '💼' },
     ],
   },
-  { section: 'System', items: [{ href: '/dashboard/settings', label: 'Settings', icon: '⚙️' }] },
 ];
 
 export default async function AdminDashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
-  if (!session) redirect('/auth/signin');
+  if (!session) redirect('/signin');
 
   return (
     <div className="flex min-h-screen" style={{ background: 'var(--cv-bg)' }}>
